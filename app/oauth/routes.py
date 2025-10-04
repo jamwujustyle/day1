@@ -31,3 +31,31 @@ async def oauth_callback(
         raise HTTPException(status_code=401, detail="Invalid state parameter")
 
     request.session.pop("oauth_session", None)
+
+    if not code:
+        raise HTTPException(status_code=401, detail="No authorization code provided")
+
+    redirect_uri = GoogleProvider().get_redirect_url(request)
+
+    oauth_service = OAuthService(db)
+    result = await oauth_service.handle_oauth_callback(code, redirect_uri)
+
+    user = result["user"]
+    is_new = result["is_new_user"]
+
+    return {
+        "message": "Login successful" if not is_new else "Account created successfully",
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "username": user.username,
+            "created_at": user.created_at.isoformat(),
+        },
+        "is_new_user": is_new,
+    }
+
+
+@router.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return {"message": "Logged out successfully"}

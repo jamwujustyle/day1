@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OAuth Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      .button {
+        background: #4285f4;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .button:hover {
+        background: #357ae8;
+      }
+      .token-display {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+        word-break: break-all;
+      }
+      .user-info {
+        background: #e8f5e9;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+      .error {
+        background: #ffebee;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+        color: #c62828;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>OAuth Test</h1>
+
+    <div id="login-section">
+      <a href="http://localhost:9000/auth/google" class="button">
+        Login with Google
+      </a>
+    </div>
+
+    <div id="callback-section" style="display: none">
+      <h2>OAuth Callback</h2>
+      <p>Processing login...</p>
+    </div>
+
+    <div id="result-section"></div>
+
+    <script>
+      const API_URL = "http://localhost:8000";
+
+      // Check if we're on the callback page
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+      const state = urlParams.get("state");
+
+      if (code && state) {
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("callback-section").style.display = "block";
+
+        // The backend handles the callback, but we need to extract tokens from the response
+        // In a real app, your backend would redirect here with tokens or set them in cookies
+
+        // For testing, let's manually call the callback endpoint
+        fetch(`${API_URL}/auth/callback/google?code=${code}&state=${state}`, {
+          credentials: "include",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("callback-section").style.display = "none";
+
+            if (data.access_token) {
+              // Store tokens
+              localStorage.setItem("access_token", data.access_token);
+              localStorage.setItem("refresh_token", data.refresh_token);
+
+              displaySuccess(data);
+
+              // Test the /users/me endpoint
+              testAuthenticatedRequest();
+            } else {
+              displayError("No access token received");
+            }
+          })
+          .catch((error) => {
+            document.getElementById("callback-section").style.display = "none";
+            displayError(error.message);
+          });
+      }
+
+      function displaySuccess(data) {
+        const html = `
+                <div class="user-info">
+                    <h3>Login Successful!</h3>
+                    <p><strong>User ID:</strong> ${data.user.id}</p>
+                    <p><strong>Email:</strong> ${data.user.email}</p>
+                    <p><strong>Username:</strong> ${data.user.username}</p>
+                    <p><strong>New User:</strong> ${
+                      data.is_new_user ? "Yes" : "No"
+                    }</p>
+                </div>
+                <div class="token-display">
+                    <h3>Access Token:</h3>
+                    <p>${data.access_token}</p>
+                    <h3>Refresh Token:</h3>
+                    <p>${data.refresh_token}</p>
+                </div>
+                <button onclick="testAuthenticatedRequest()" class="button" style="margin-top: 20px;">
+                    Test /users/me
+                </button>
+                <button onclick="logout()" class="button" style="margin-top: 20px; background: #dc3545;">
+                    Logout
+                </button>
+            `;
+        document.getElementById("result-section").innerHTML = html;
+      }
+
+      function displayError(message) {
+        const html = `
+                <div class="error">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        document.getElementById("result-section").innerHTML = html;
+      }
+
+      async function testAuthenticatedRequest() {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          alert("No access token found. Please login first.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/users/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert(
+              "Authenticated request successful!\n\n" +
+                JSON.stringify(data, null, 2)
+            );
+          } else {
+            alert(
+              "Authenticated request failed:\n\n" +
+                JSON.stringify(data, null, 2)
+            );
+          }
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        window.location.href = window.location.pathname;
+      }
+
+      // Check if user is already logged in
+      window.addEventListener("load", () => {
+        const token = localStorage.getItem("access_token");
+        if (token && !code) {
+          document.getElementById("login-section").innerHTML = `
+                    <p>You are already logged in.</p>
+                    <button onclick="testAuthenticatedRequest()" class="button">
+                        Test /users/me
+                    </button>
+                    <button onclick="logout()" class="button" style="background: #dc3545;">
+                        Logout
+                    </button>
+                `;
+        }
+      });
+    </script>
+  </body>
+</html>

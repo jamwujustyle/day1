@@ -34,4 +34,4 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.rollback()
             raise
         finally:
-            session.close()
+            await session.close()

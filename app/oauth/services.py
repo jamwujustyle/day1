@@ -1,7 +1,7 @@
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Response
 
+from ..configs.jwt import create_access_token, create_refresh_token
 from ..users.repository import UserRepository
 from .repository import SocialAccountRepository
 from .provider import GoogleProvider
@@ -32,7 +32,7 @@ class OAuthService:
             response.raise_for_status()
             return response.json()
 
-    async def auhtenticate_or_create_user(self, google_user_data: dict):
+    async def authenticate_or_create_user(self, google_user_data: dict):
         email = google_user_data["email"]
 
         social_account = await self.social_repo.get_by_email(email)
@@ -66,24 +66,29 @@ class OAuthService:
         return user, True
 
     async def handle_oauth_callback(self, code: str, redirect_uri: str):
-        token_response = self.exchange_code_for_token(code, redirect_uri)
+        token_response = await self.exchange_code_for_token(code, redirect_uri)
 
         access_token = token_response["access_token"]
 
         google_user_data = await self.get_user_info(access_token)
 
-        user, is_new = await self.auhtenticate_or_create_user(google_user_data)
+        user, is_new = await self.authenticate_or_create_user(google_user_data)
 
-        response = Response(
-            content={"user": user, "is_new_user": is_new},
-            media_type="application/json",
-        )
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            # TODO: ENABLE IN PROD
-            # secure=True,
-            samesite="lax",
-        )
-        return response
+        access_token = create_access_token(user.id, user.email)
+        refresh_token = create_refresh_token(user.id)
+
+        # response.set_cookie(
+        #     key="access_token",
+        #     value=access_token,
+        #     httponly=True,
+        #     # TODO: ENABLE IN PROD
+        #     # secure=True,
+        #     samesite="lax",
+        # )
+        return {
+            "user": user,
+            "is_new_user": is_new,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }

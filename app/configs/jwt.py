@@ -7,8 +7,8 @@ from decouple import config
 
 SECRET_KEY = config("JWT_SECRET")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE = config("ACCESS_TOKEN_EXPIRE_MINUTES")
-REFRESH_TOKEN_EXPIRE = config("REFRESH_TOKEN_EXPIRE_DAYS")
+ACCESS_TOKEN_EXPIRE = int(config("ACCESS_TOKEN_EXPIRE_MINUTES"))
+REFRESH_TOKEN_EXPIRE = int(config("REFRESH_TOKEN_EXPIRE_DAYS"))
 
 
 def create_access_token(user_id: uuid.UUID, email: str) -> str:

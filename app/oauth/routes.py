@@ -1,8 +1,15 @@
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 
 from ..configs.database import get_db
+from ..configs.jwt import (
+    verify_refresh_token,
+    create_access_token,
+    create_refresh_token,
+)
+from ..users.repository import UserRepository
 from .provider import GoogleProvider
 from .services import OAuthService
 
@@ -30,7 +37,7 @@ async def oauth_callback(
     if not stored_state or stored_state != state:
         raise HTTPException(status_code=401, detail="Invalid state parameter")
 
-    request.session.pop("oauth_session", None)
+    request.session.pop("oauth_state", None)
 
     if not code:
         raise HTTPException(status_code=401, detail="No authorization code provided")
@@ -41,21 +48,32 @@ async def oauth_callback(
     result = await oauth_service.handle_oauth_callback(code, redirect_uri)
 
     user = result["user"]
-    is_new = result["is_new_user"]
 
     return {
-        "message": "Login successful" if not is_new else "Account created successfully",
+        "access_token": result["access_token"],
+        "refresh_token": result["refresh_token"],
+        "token_type": result["token_type"],
         "user": {
             "id": str(user.id),
             "email": user.email,
             "username": user.username,
             "created_at": user.created_at.isoformat(),
         },
-        "is_new_user": is_new,
+        "is_new_user": result["is_new_user"],
     }
 
 
-@router.get("/logout")
-async def logout(request: Request):
-    request.session.clear()
-    return {"message": "Logged out successfully"}
+@router.post("/logout")
+async def logout():
+    """
+    Logout endpoint - with JWT auth, logout is handled client-side.
+    Client should delete the JWT token from storage.
+
+    For true server-side logout, you would need to implement:
+    - Token blacklist/revocation
+    - Store invalidated tokens in Redis with TTL
+    """
+    return {
+        "message": "Logout successful. Client should delete JWT token.",
+        "action": "delete_token_client_side",
+    }

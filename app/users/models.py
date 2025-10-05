@@ -25,5 +25,5 @@ class User(Base, UUIDMixin):
         "SocialAccount",
         back_populates="user",
         cascade="all, delete-orphan",
-        userlist=False,
+        uselist=False,
     )

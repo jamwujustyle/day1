@@ -16,6 +16,7 @@ services:
 
   migrate:
     build: .
+    container_name: migrate
     command: alembic upgrade head
     volumes:
       - .:/app

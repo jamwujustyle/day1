@@ -6,6 +6,8 @@ from .models import User
 from typing import Optional
 import uuid
 
+from datetime import datetime, timezone
+
 
 class UserRepository:
     def __init__(self, db: AsyncSession):
@@ -29,3 +31,19 @@ class UserRepository:
         await self.db.commit()
         await self.db.refresh(user)
         return user
+
+    async def update_username(self, user: User, new_username: str) -> User:
+        user.username = new_username
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
+
+    async def update_avatar(self, user: User, new_avatar: str) -> User:
+        user.avatar = new_avatar
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
+
+    async def update_last_active(self, user: User) -> None:
+        user.last_active_at = datetime.now(timezone.utc)
+        await self.db.commit()

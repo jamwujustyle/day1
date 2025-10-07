@@ -1,4 +1,3 @@
-import uuid
 from typing import Optional
 from datetime import datetime, timezone
 from sqlalchemy import String, TIMESTAMP
@@ -33,4 +32,7 @@ class User(Base, UUIDMixin):
         back_populates="user",
         cascade="all, delete-orphan",
         uselist=False,
+    )
+    videos: Mapped[list["Video"]] = relationship(
+        "Video", back_populates="user", cascade="all, delete-orphan"
     )

@@ -73,3 +73,8 @@ async def get_optional_user(
         return await get_current_user(credentials, db)
     except HTTPException:
         return None
+
+
+async def update_avatar(user: User, new_avatar: str, db: AsyncSession) -> User:
+    repo = UserRepository(db)
+    return await repo.update_avatar(user, new_avatar)

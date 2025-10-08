@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Endpoints Test</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 2em;
+        background-color: #f4f4f9;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .endpoint-test {
+        margin-bottom: 2em;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 5px;
+      }
+      input {
+        width: calc(100% - 20px);
+        padding: 8px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+      button {
+        padding: 10px 15px;
+        border: none;
+        background-color: #28a745;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 5px;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      pre {
+        background-color: #eee;
+        padding: 10px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>User Endpoints Tester</h1>
+
+      <!-- Get Current User -->
+      <div class="endpoint-test">
+        <h2>Get Current User Info</h2>
+        <button id="get-me-btn">GET /users/me</button>
+        <pre id="get-me-result">Click the button to fetch your data.</pre>
+      </div>
+
+      <!-- Update Username -->
+      <div class="endpoint-test">
+        <h2>Update Username</h2>
+        <form id="update-username-form">
+          <label for="new-username">New Username:</label>
+          <input type="text" id="new-username" name="new_username" required />
+          <button type="submit">PATCH /users/username/update</button>
+        </form>
+        <pre id="update-username-result">API response will be shown here.</pre>
+      </div>
+
+      <!-- Update Avatar -->
+      <div class="endpoint-test">
+        <h2>Update Avatar</h2>
+        <form id="update-avatar-form">
+          <label for="avatar-file">Avatar Image:</label>
+          <input
+            type="file"
+            id="avatar-file"
+            name="file"
+            accept="image/*"
+            required
+          />
+          <button type="submit">PATCH /users/image/update</button>
+        </form>
+        <pre id="update-avatar-result">API response will be shown here.</pre>
+      </div>
+    </div>
+
+    <script>
+      // Helper to display results
+      const displayResult = (elementId, data) => {
+        document.getElementById(elementId).textContent = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      };
+
+      // Get Current User
+      document
+        .getElementById("get-me-btn")
+        .addEventListener("click", async () => {
+          const resultEl = document.getElementById("get-me-result");
+          resultEl.innerHTML = "Fetching..."; // Use innerHTML to clear previous content
+          try {
+            const response = await fetch("/users/me");
+            const data = await response.json();
+
+            // Clear previous results and display new JSON
+            resultEl.innerHTML = "";
+            const pre = document.createElement("pre");
+            pre.textContent = JSON.stringify(data, null, 2);
+            resultEl.appendChild(pre);
+
+            // If avatar exists, create and display an image tag
+            if (data.avatar) {
+              const img = document.createElement("img");
+              img.src = data.avatar;
+              img.alt = "User Avatar";
+              img.style.maxWidth = "200px";
+              img.style.marginTop = "10px";
+              img.style.borderRadius = "8px";
+              resultEl.appendChild(img);
+            }
+          } catch (error) {
+            resultEl.textContent = "Error: " + error.message;
+          }
+        });
+
+      // Update Username
+      document
+        .getElementById("update-username-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const resultEl = document.getElementById("update-username-result");
+          resultEl.textContent = "Updating...";
+          const newUsername = e.target.new_username.value;
+
+          try {
+            const response = await fetch(
+              `/users/username/update?new_username=${encodeURIComponent(
+                newUsername
+              )}`,
+              {
+                method: "PATCH",
+              }
+            );
+            const data = await response.json();
+            displayResult("update-username-result", data);
+            if (response.ok) {
+              alert(
+                "Username updated! Fetch your info again to see the change."
+              );
+            }
+          } catch (error) {
+            resultEl.textContent = "Error: " + error.message;
+          }
+        });
+
+      // Update Avatar
+      document
+        .getElementById("update-avatar-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const resultEl = document.getElementById("update-avatar-result");
+          resultEl.textContent = "Uploading...";
+          const formData = new FormData();
+          formData.append("file", e.target.file.files[0]);
+
+          try {
+            const response = await fetch("/users/image/update", {
+              method: "PATCH",
+              body: formData,
+            });
+            const data = await response.json();
+            displayResult("update-avatar-result", data);
+            if (response.ok) {
+              alert("Avatar updated! Fetch your info again to see the change.");
+            }
+          } catch (error) {
+            resultEl.textContent = "Error: " + error.message;
+          }
+        });
+    </script>
+  </body>
+</html>

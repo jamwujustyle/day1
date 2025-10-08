@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, UploadFile, File
 
 from .services import get_current_user, update_avatar, update_username
 from .schemas import UserResponse
@@ -31,11 +31,11 @@ async def get_user_profile(username: str):
 @router.patch("/image/update")
 async def update_user_avatar(
     request: Request,
-    new_avatar: str,
+    file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    updated_user = await update_avatar(current_user, new_avatar, db)
+    updated_user = await update_avatar(current_user, file, db)
     return {"id": str(updated_user.id), "avatar": updated_user.avatar}
 
 

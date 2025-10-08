@@ -1,6 +1,10 @@
-from fastapi import Depends, HTTPException, status, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+import os
+import shutil
 import uuid
+
+from fastapi import Depends, HTTPException, status, Request, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 from ..configs.jwt import verify_access_token
 from ..configs.database import get_db
@@ -77,9 +81,20 @@ async def get_optional_user(
         return None
 
 
-async def update_avatar(user: User, new_avatar: str, db: AsyncSession) -> User:
+async def update_avatar(user: User, file: UploadFile, db: AsyncSession) -> User:
+    AVATAR_MEDIA_ROOT = "media/images/avatars"
+    os.makedirs(AVATAR_MEDIA_ROOT, exist_ok=True)
+
+    file_extension = file.filename.split(".")[-1]
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    file_path = os.path.join(AVATAR_MEDIA_ROOT, unique_filename)
+    file_url = f"/{file_path}"
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
     repo = UserRepository(db)
-    return await repo.update_avatar(user, new_avatar)
+    return await repo.update_avatar(user, file_url)
 
 
 async def update_username(user: User, new_username: str, db: AsyncSession) -> User:

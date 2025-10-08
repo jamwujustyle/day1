@@ -38,9 +38,19 @@ app.add_middleware(
 )
 
 
+@app.get("/oauth-test")
+async def get_user_test_page():
+    return FileResponse("app/oauth.html")
+
+
 @app.get("/video-test")
 async def get_video_test_page():
     return FileResponse("app/video.html")
+
+
+@app.get("/user-test")
+async def get_user_test_page():
+    return FileResponse("app/users.html")
 
 
 app.include_router(oauth_router)

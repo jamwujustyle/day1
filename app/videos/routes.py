@@ -1,10 +1,10 @@
-from fastapi import Depends
+from fastapi import Depends, Request, UploadFile, File, Form
 from fastapi.routing import APIRouter
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .services import VideoService
-from .schemas import VideoCreate, VideoResponse
+from .schemas import VideoResponse
 
 from ..users.services import get_current_user
 from ..users.models import User
@@ -18,17 +18,24 @@ router = APIRouter(prefix="/videos", tags=["videos"])
 
 @router.post("/upload", response_model=VideoResponse)
 async def upload_video(
-    payload: VideoCreate,
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(...),
+    file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     service = VideoService(db)
-    return await service.upload_video(user=current_user, payload=payload)
+    return await service.upload_video(
+        user=current_user, file=file, title=title, description=description
+    )
 
 
 @router.get("/my-videos", response_model=list[VideoResponse])
 async def get_my_videos(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     service = VideoService(db)
 

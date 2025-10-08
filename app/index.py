@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -35,6 +36,11 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=config("SESSION_SECRET"),
 )
+
+
+@app.get("/video-test")
+async def get_video_test_page():
+    return FileResponse("app/video.html")
 
 
 app.include_router(oauth_router)

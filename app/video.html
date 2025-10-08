@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Upload Test</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 2em;
+        background-color: #f4f4f9;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      form {
+        margin-bottom: 2em;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+      button {
+        padding: 10px 15px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #video-list {
+        margin-top: 2em;
+      }
+      .video-item {
+        margin-bottom: 1.5em;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 1em;
+      }
+      video {
+        max-width: 100%;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Video Tester</h1>
+
+      <h2>Upload a New Video</h2>
+      <form id="upload-form">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required />
+        <br />
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea>
+        <br />
+        <label for="file">Video File:</label>
+        <input type="file" id="file" name="file" accept="video/*" required />
+        <br />
+        <button type="submit">Upload</button>
+      </form>
+      <div id="upload-status"></div>
+
+      <hr />
+
+      <h2>My Videos</h2>
+      <button id="fetch-videos">Fetch My Videos</button>
+      <div id="video-list"></div>
+    </div>
+
+    <script>
+      const uploadForm = document.getElementById("upload-form");
+      const uploadStatus = document.getElementById("upload-status");
+      const fetchVideosBtn = document.getElementById("fetch-videos");
+      const videoList = document.getElementById("video-list");
+
+      // Handle video upload
+      uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        uploadStatus.textContent = "Uploading...";
+
+        const formData = new FormData();
+        formData.append("title", e.target.title.value);
+        formData.append("description", e.target.description.value);
+        formData.append("file", e.target.file.files[0]);
+
+        try {
+          const response = await fetch("/videos/upload", {
+            method: "POST",
+            body: formData,
+            // Headers are not needed; the browser sets the correct multipart header with boundary
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            uploadStatus.textContent =
+              "Upload successful! Video ID: " + result.id;
+            uploadForm.reset();
+            // Refresh the video list
+            fetchVideosBtn.click();
+          } else {
+            const error = await response.json();
+            uploadStatus.textContent = `Upload failed: ${
+              error.detail || response.statusText
+            }`;
+          }
+        } catch (error) {
+          uploadStatus.textContent = "An error occurred: " + error.message;
+        }
+      });
+
+      // Handle fetching videos
+      fetchVideosBtn.addEventListener("click", async () => {
+        videoList.innerHTML = "Loading videos...";
+        try {
+          const response = await fetch("/videos/my-videos");
+          if (response.ok) {
+            const videos = await response.json();
+            if (videos.length === 0) {
+              videoList.innerHTML =
+                "<p>You have not uploaded any videos yet.</p>";
+              return;
+            }
+
+            videoList.innerHTML = ""; // Clear loading message
+            videos.forEach((video) => {
+              const videoElement = document.createElement("div");
+              videoElement.className = "video-item";
+              videoElement.innerHTML = `
+                        <h3>${video.title}</h3>
+                        <p>${video.description}</p>
+                        <video controls width="600">
+                            <source src="${video.file_url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+              videoList.appendChild(videoElement);
+            });
+          } else {
+            const error = await response.json();
+            videoList.textContent = `Failed to fetch videos: ${
+              error.detail || response.statusText
+            }`;
+          }
+        } catch (error) {
+          videoList.textContent = "An error occurred: " + error.message;
+        }
+      });
+    </script>
+  </body>
+</html>

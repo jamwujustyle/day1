@@ -12,13 +12,13 @@ class VideoBase(BaseModel):
 
 
 class VideoCreate(VideoBase):
-    file_url: HttpUrl = Field(..., description="URL of the uploaded video")
+    pass
 
 
 class VideoResponse(VideoBase):
     id: UUID = Field(..., description="Uniqie identifier of the video")
     user_id: UUID = Field(..., description="Author of the video")
-    file_url: HttpUrl = Field(..., description="Cloud storage URL for the video")
+    file_url: str = Field(..., description="Relative path to the video file")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 

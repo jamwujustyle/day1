@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
-from .services import get_current_user, update_avatar
+from .services import get_current_user, update_avatar, update_username
 from .schemas import UserResponse
 from .models import User
 
@@ -28,7 +28,7 @@ async def get_user_profile(username: str):
     return {"message": f"Profile for {username}"}
 
 
-@router.patch("/image/update/")
+@router.patch("/image/update")
 async def update_user_avatar(
     request: Request,
     new_avatar: str,
@@ -37,3 +37,15 @@ async def update_user_avatar(
 ):
     updated_user = await update_avatar(current_user, new_avatar, db)
     return {"id": str(updated_user.id), "avatar": updated_user.avatar}
+
+
+@router.patch("/username/update")
+async def update_user_username(
+    request: Request,
+    new_username: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    updated_user = await update_username(current_user, new_username, db)
+
+    return {"id": str(updated_user.id), "username": updated_user.username}

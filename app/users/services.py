@@ -80,3 +80,8 @@ async def get_optional_user(
 async def update_avatar(user: User, new_avatar: str, db: AsyncSession) -> User:
     repo = UserRepository(db)
     return await repo.update_avatar(user, new_avatar)
+
+
+async def update_username(user: User, new_username: str, db: AsyncSession) -> User:
+    repo = UserRepository(db)
+    return await repo.update_username(user, new_username)

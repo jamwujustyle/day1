@@ -1,5 +1,11 @@
 from celery import Celery
 
+from app.users.models import User
+from app.videos.models.video import Video, LocalizedVideo
+from app.oauth.models import SocialAccount
+from app.videos.models.subtitle import Subtitle
+
+
 celery_app = Celery(
     "tasks",
     broker="redis://redis:6379/0",

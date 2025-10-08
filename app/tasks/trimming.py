@@ -6,9 +6,8 @@ import os
 import uuid
 
 
-from ..videos.services.video import VideoService
-from ..videos.models.video import Video
 from ..configs.database import SyncSessionLocal
+from ..videos.models.video import Video
 
 MEDIA_ROOT = "media/videos"
 

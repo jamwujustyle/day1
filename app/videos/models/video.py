@@ -2,10 +2,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy import ForeignKey
 from uuid import UUID
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from ...core.mixins import UUIDMixin, TimestampMixin
 from ...configs.database import Base
+
+if TYPE_CHECKING:
+    from ...users.models import User
+    from .subtitle import Subtitle
 
 
 class Video(Base, UUIDMixin, TimestampMixin):
@@ -37,3 +41,6 @@ class LocalizedVideo(Base, UUIDMixin, TimestampMixin):
         PG_UUID(as_uuid=True), ForeignKey("videos.id"), nullable=False
     )
     video: Mapped["Video"] = relationship("Video", back_populates="localized_versions")
+
+
+from .subtitle import Subtitle

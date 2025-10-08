@@ -101,8 +101,7 @@
 
           if (response.ok) {
             const result = await response.json();
-            uploadStatus.textContent =
-              "Upload successful! Video ID: " + result.id;
+            uploadStatus.textContent = "Upload pending! Video ID: " + result.id;
             uploadForm.reset();
             // Refresh the video list
             fetchVideosBtn.click();

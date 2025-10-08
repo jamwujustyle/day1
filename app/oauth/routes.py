@@ -1,17 +1,12 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 
 from ..configs.database import get_db
-from ..configs.jwt import (
-    verify_refresh_token,
-    create_access_token,
-    create_refresh_token,
-)
-from ..users.repository import UserRepository
+
 from .provider import GoogleProvider
 from .services import OAuthService
+from .schemas import OAuthCallbackResponse
 
 router = APIRouter(prefix="/auth", tags=["oauth"])
 
@@ -26,6 +21,7 @@ async def google_login(request: Request):
 async def oauth_callback(
     provider: str,
     request: Request,
+    response: Response,
     code: str = None,
     state: str = None,
     db: AsyncSession = Depends(get_db),
@@ -49,18 +45,25 @@ async def oauth_callback(
 
     user = result["user"]
 
-    return {
-        "access_token": result["access_token"],
-        "refresh_token": result["refresh_token"],
-        "token_type": result["token_type"],
-        "user": {
-            "id": str(user.id),
-            "email": user.email,
-            "username": user.username,
-            "created_at": user.created_at.isoformat(),
-        },
-        "is_new_user": result["is_new_user"],
-    }
+    response.set_cookie(
+        key="access_token",
+        value=result["acces_token"],
+        httponly=True,
+        # TODO: CHANGE IN PROD
+        secure=False,
+        samesite="lax",
+        max_age=1800,
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=result["refresh_token"],
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=604800,
+    )
+
+    return OAuthCallbackResponse(user=user, is_new_user=result["is_new_user"])
 
 
 @router.post("/logout")

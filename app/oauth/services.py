@@ -77,14 +77,6 @@ class OAuthService:
         access_token = create_access_token(user.id, user.email)
         refresh_token = create_refresh_token(user.id)
 
-        # response.set_cookie(
-        #     key="access_token",
-        #     value=access_token,
-        #     httponly=True,
-        #     # TODO: ENABLE IN PROD
-        #     # secure=True,
-        #     samesite="lax",
-        # )
         return {
             "user": user,
             "is_new_user": is_new,

@@ -1,4 +1,4 @@
-from pydantic import Field, BaseModel, HttpUrl
+from pydantic import Field, BaseModel, HttpUrl, ConfigDict
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -22,5 +22,4 @@ class VideoResponse(VideoBase):
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

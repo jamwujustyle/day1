@@ -3,8 +3,8 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy import ForeignKey
 from uuid import UUID
 
-from ..core.mixins import UUIDMixin, TimestampMixin
-from ..configs.database import Base
+from ...core.mixins import UUIDMixin, TimestampMixin
+from ...configs.database import Base
 
 
 class Video(Base, UUIDMixin, TimestampMixin):

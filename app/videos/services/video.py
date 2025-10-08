@@ -5,10 +5,10 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from ..users.models import User
+from ...users.models import User
 
-from .schemas import VideoResponse
-from .repository import VideoRepository
+from ..schemas.video import VideoResponse
+from ..repositories.video import VideoRepository
 
 MEDIA_ROOT = "media/videos"
 

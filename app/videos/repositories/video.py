@@ -1,4 +1,4 @@
-from .models import Video
+from ..models.video import Video
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

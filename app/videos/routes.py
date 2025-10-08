@@ -3,8 +3,8 @@ from fastapi.routing import APIRouter
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .services import VideoService
-from .schemas import VideoResponse
+from .services.video import VideoService
+from .schemas.video import VideoResponse
 
 from ..users.services import get_current_user
 from ..users.models import User

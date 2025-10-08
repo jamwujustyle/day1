@@ -1,21 +1,21 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from .services import get_current_user, update_avatar
-from ..configs.database import get_db, AsyncSession
+from .schemas import UserResponse
 from .models import User
+
+from ..configs.database import get_db, AsyncSession
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/me")
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
-
-    return {
-        "id": str(current_user.id),
-        "username": current_user.username,
-        "email": current_user.email,
-        "created_at": current_user.created_at.isoformat(),
-    }
+async def get_current_user_info(
+    request: Request, current_user: User = Depends(get_current_user)
+):
+    # The dependency now implicitly uses the request, but we must accept it in the path function
+    # to make it available to the dependency injection system.
+    return UserResponse.model_validate(current_user)
 
 
 @router.get("/profile/{username}")
@@ -30,6 +30,7 @@ async def get_user_profile(username: str):
 
 @router.patch("/image/update/")
 async def update_user_avatar(
+    request: Request,
     new_avatar: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

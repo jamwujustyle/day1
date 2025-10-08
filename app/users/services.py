@@ -1,5 +1,4 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -9,18 +8,21 @@ from ..users.repository import UserRepository
 from ..users.models import User
 
 
-security = HTTPBearer()
-
-
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """
-    Dependency to get current authenticated user from JWT token.
+    Dependency to get current authenticated user from JWT token in cookies.
     Use in routes like: current_user: User = Depends(get_current_user)
     """
-    token = credentials.credentials
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     payload = verify_access_token(token)
 
@@ -62,7 +64,7 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> User | None:
     """
@@ -70,7 +72,7 @@ async def get_optional_user(
     Useful for endpoints that work with or without auth.
     """
     try:
-        return await get_current_user(credentials, db)
+        return await get_current_user(request, db)
     except HTTPException:
         return None
 

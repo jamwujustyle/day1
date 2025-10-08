@@ -12,7 +12,6 @@ from .users.routes import router as user_router
 from .videos.routes import router as video_router
 
 app = FastAPI(title="logg", version="1.0.0")
-
 MEDIA_ROOT = Path(config("MEDIA_ROOT"))
 MEDIA_URL = config("MEDIA_URL")
 

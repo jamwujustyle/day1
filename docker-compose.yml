@@ -6,7 +6,8 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - .:/app
+      - .:/server
+    working_dir: /server
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@my_db:5432/postgres
     restart: always
@@ -19,7 +20,8 @@ services:
     container_name: migrate
     command: alembic upgrade head
     volumes:
-      - .:/app
+      - .:/server
+    working_dir: /server
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@my_db:5432/postgres
     depends_on:

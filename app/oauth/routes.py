@@ -47,7 +47,7 @@ async def oauth_callback(
 
     response.set_cookie(
         key="access_token",
-        value=result["acces_token"],
+        value=result["access_token"],
         httponly=True,
         # TODO: CHANGE IN PROD
         secure=False,
@@ -67,16 +67,13 @@ async def oauth_callback(
 
 
 @router.post("/logout")
-async def logout():
-    """
-    Logout endpoint - with JWT auth, logout is handled client-side.
-    Client should delete the JWT token from storage.
+async def logout(response: Response):
+    response.delete_cookie(
+        key="access_token", httponly=True, secure=False, samesite="lax"
+    )
 
-    For true server-side logout, you would need to implement:
-    - Token blacklist/revocation
-    - Store invalidated tokens in Redis with TTL
-    """
-    return {
-        "message": "Logout successful. Client should delete JWT token.",
-        "action": "delete_token_client_side",
-    }
+    response.delete_cookie(
+        key="refresh_token", httponly=True, secure=False, samesite="lax"
+    )
+
+    return {"message": "Logout successful. Tokens have been cleared"}

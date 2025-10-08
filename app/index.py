@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+
 from starlette.middleware.sessions import SessionMiddleware
 from decouple import config
 from pathlib import Path

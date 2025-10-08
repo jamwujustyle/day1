@@ -19,15 +19,14 @@ router = APIRouter(prefix="/videos", tags=["videos"])
 @router.post("/upload", response_model=VideoResponse)
 async def upload_video(
     request: Request,
-    title: str = Form(...),
-    description: str = Form(...),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     service = VideoService(db)
     return await service.upload_video(
-        user=current_user, file=file, title=title, description=description
+        user=current_user,
+        file=file,
     )
 
 

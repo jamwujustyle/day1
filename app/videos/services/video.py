@@ -1,16 +1,15 @@
 import os
-import shutil
 import uuid
+import shutil
+from typing import List
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 
 from ...users.models import User
-
 from ..schemas.video import VideoResponse
 from ..repositories.video import VideoRepository
 
-MEDIA_ROOT = "media/videos"
+from app.celery_app import celery_app
 
 
 class VideoService:
@@ -18,23 +17,19 @@ class VideoService:
         self.repo = VideoRepository(db)
 
     async def upload_video(
-        self, user: User, file: UploadFile, title: str, description: str
+        self,
+        user: User,
+        file: UploadFile,
     ) -> VideoResponse:
-        os.makedirs(MEDIA_ROOT, exist_ok=True)
 
-        file_extension = file.filename.split(".")[-1]
-        unique_filename = f"{uuid.uuid4()}.{file_extension}"
-        file_path = os.path.join(MEDIA_ROOT, unique_filename)
-        file_url = f"/{file_path}"
+        temp_path = f"/tmp/{uuid.uuid4()}.{file.filename.split('.')[-1]}"
 
-        with open(file_path, "wb") as buffer:
+        with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        video = await self.repo.create_video(
-            user_id=user.id,
-            title=title,
-            description=description,
-            file_url=file_url,
+        video = await self.repo.create_video(user_id=user.id, file_url="pending")
+        celery_app.send_task(
+            "app.tasks.trimming.trim_silence", args=[temp_path, str(video.id)]
         )
 
         return VideoResponse.model_validate(video)

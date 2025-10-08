@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 from .oauth.routes import router as oauth_router
+from .auth.routes import router as auth_router
 from .users.routes import router as user_router
 from .videos.routes import router as video_router
 
@@ -37,5 +38,6 @@ app.add_middleware(
 
 
 app.include_router(oauth_router)
+app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(video_router)

@@ -8,7 +8,7 @@ from .provider import GoogleProvider
 from .services import OAuthService
 from .schemas import OAuthCallbackResponse
 
-router = APIRouter(prefix="/auth", tags=["oauth"])
+router = APIRouter(prefix="/oauth", tags=["oauth"])
 
 
 @router.get("/google")
@@ -64,16 +64,3 @@ async def oauth_callback(
     )
 
     return OAuthCallbackResponse(user=user, is_new_user=result["is_new_user"])
-
-
-@router.post("/logout")
-async def logout(response: Response):
-    response.delete_cookie(
-        key="access_token", httponly=True, secure=False, samesite="lax"
-    )
-
-    response.delete_cookie(
-        key="refresh_token", httponly=True, secure=False, samesite="lax"
-    )
-
-    return {"message": "Logout successful. Tokens have been cleared"}

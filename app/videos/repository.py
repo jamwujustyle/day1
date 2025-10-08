@@ -8,9 +8,7 @@ class VideoRepository:
         self.db = db
 
     async def create_video(self, user_id, title, description, file_url):
-        video = Video(
-            user_id=user_id, title=title, description=description, file_url=file_url
-        )
+        video = Video(user_id=user_id, file_url=file_url)
 
         self.db.add(video)
         await self.db.commit()

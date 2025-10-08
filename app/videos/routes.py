@@ -39,7 +39,7 @@ async def get_my_videos(
 ):
     service = VideoService(db)
 
-    return await service.get_user_videos(user=current_user.id)
+    return await service.get_user_videos(current_user.id)
 
 
 @router.get("/user/{user_id}/videos", response_model=list[VideoResponse])

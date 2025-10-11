@@ -2,12 +2,12 @@ from moviepy import VideoFileClip, concatenate_videoclips
 from pydub import AudioSegment, silence
 from celery import shared_task, group
 from sqlalchemy import select
+
 import os
-import uuid
 import openai
 from decouple import config
 
-from .dubbing import dub_audio, LANGUAGE_MAP
+from . import LANGUAGE_MAP
 from ..configs.database import SyncSessionLocal
 from ..videos.models.video import Video
 
@@ -72,27 +72,6 @@ def trim_silence(temp_path: str, video_id: str):
             # Save the detected language to the video model
             video.language = source_lang
             db.commit()
-
-        target_languages = [
-            "english",
-            "spanish",
-            "mandarin",
-            "french",
-            "hindi",
-            "russian",
-        ]
-        dubbing_tasks = []
-        for lang_name in target_languages:
-            lang_code = LANGUAGE_MAP.get(lang_name)
-            if lang_code and lang_code != source_lang:
-                dubbing_tasks.append(
-                    dub_audio.s(trimmed_audio_path, lang_code, video_id)
-                )
-
-        if dubbing_tasks:
-            job = group(dubbing_tasks)
-            job.apply_async()
-            print(f"Started dubbing tasks for {len(dubbing_tasks)} languages.")
 
     except Exception as ex:
         db.rollback()

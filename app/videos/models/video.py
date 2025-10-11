@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, String, Text
 from uuid import UUID
 from typing import List, TYPE_CHECKING
 
@@ -14,6 +14,9 @@ if TYPE_CHECKING:
 
 class Video(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "videos"
+
+    title: Mapped[str] = mapped_column(String(70), nullable=True)
+    summary: Mapped[str] = mapped_column(Text, nullable=True)
 
     user_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False

@@ -10,6 +10,9 @@ from decouple import config
 from . import LANGUAGE_MAP
 from ..configs.database import SyncSessionLocal
 from ..videos.models.video import Video
+from ..videos.models.subtitle import Subtitle
+
+from app.videos.services.subtitle import SubtitleService
 
 MEDIA_ROOT = "media/videos"
 OPENAI_KEY = config(
@@ -64,14 +67,27 @@ def trim_silence(temp_path: str, video_id: str):
 
         with open(trimmed_audio_path, "rb") as audio_file:
             transcription = openai.audio.transcriptions.create(
-                model="whisper-1", file=audio_file, response_format="verbose_json"
+                model="whisper-1",
+                file=audio_file,
+                response_format="verbose_json",
+                timestamp_granularities=["word"],
             )
             source_lang = transcription.language
+
+            subtitle_service = SubtitleService(db)
+            subtitle = subtitle_service.create_subtitle_from_transcription(
+                transcription_data=transcription,
+                video_id=video_id,
+                language=source_lang,
+            )
             print(f"Detected language: {source_lang}")
 
-            # Save the detected language to the video model
             video.language = source_lang
+
             db.commit()
+        from app.tasks.transcribing import generate_subtitles_for_video
+
+        generate_subtitles_for_video.delay(video_id)
 
     except Exception as ex:
         db.rollback()

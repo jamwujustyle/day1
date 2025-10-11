@@ -9,7 +9,9 @@ class SubtitleRepository:
         self.db = db
 
     async def create_subtitle(self, language, text, segments, video_id) -> Subtitle:
-        subtitle = Subtitle(language=language, text=text)
+        subtitle = Subtitle(
+            language=language, text=text, segments=segments, video_id=video_id
+        )
 
         self.db.add(subtitle)
         await self.db.commit()

@@ -1,58 +1,75 @@
-from celery import shared_task
-from decouple import config
+from celery import shared_task, group
+from sqlalchemy import select
 
 from app.videos.models.subtitle import Subtitle
+from app.videos.services.subtitle import SubtitleService
+
 from ..configs.database import SyncSessionLocal
+from . import OPENAI_KEY, LANGUAGE_MAP
 
 import os
 import openai
 
 
-MEDIA_ROOT = "media/videos"
-LAB_KEY = config("ELEVENLABS_API_KEY", default="")
-OPENAI_KEY = config("OPENAI_API_KEY", default="")
-
 openai.api_key = OPENAI_KEY
 
 
 @shared_task
-def transcribe_dubbed_audio(audio_path: str, language: str, video_id: str):
-    """Transcribe dubbed audio and save as subtitle"""
-    if not os.path.exists(audio_path):
-        print(f"Error: Audio file not found at {audio_path}")
-        return
-
+def transcribe_to_language(video_id: str, language: str, lang_code: str):
     db = SyncSessionLocal()
+
     try:
-        with open(audio_path, "rb") as f:
+        from app.videos.models.video import Video
+
+        video = db.execute(select(Video).where(Video.id == video_id)).scalar_one()
+
+        existing = db.execute(
+            select(Subtitle).where(
+                (Subtitle.video_id == video_id) & (Subtitle.language == language)
+            )
+        ).scalar_one_or_none()
+
+        if existing:
+            print("Subtitle already exists")
+            return
+
+        audio_path = f"/tmp/{video_id}_audio_{lang_code}.wav"
+
+        from moviepy import VideoFileClip
+
+        clip = VideoFileClip(video.file_url)
+        clip.audio.write_audiofile(audio_path, verbose=False, logger=None)
+        clip.close()
+
+        with open(audio_path, "rb") as file:
             transcription = openai.audio.transcriptions.create(
                 model="whisper-1",
-                file=f,
-                response_format="text",
+                file=file,
+                language=lang_code,
+                response_format="verbose_json",
+                timestamp_granularities=["word"],
             )
-
-        # Save subtitle to media/subtitles
-        subtitle_dir = os.path.join("media/subtitles", str(video_id))
-        os.makedirs(subtitle_dir, exist_ok=True)
-        subtitle_filename = f"{language}.txt"
-        subtitle_path = os.path.join(subtitle_dir, subtitle_filename)
-
-        with open(subtitle_path, "w") as f:
-            f.write(transcription)
-
-        # Save to database
-        subtitle = Subtitle(
-            video_id=video_id,
-            language=language,
-            file_url=f"/{subtitle_path}",
+        subtitle_service = SubtitleService(db)
+        subtitle = subtitle_service.create_subtitle_from_transcription(
+            transcription_data=transcription, video_id=video_id, language=language
         )
-        db.add(subtitle)
-        db.commit()
-        print(f"Subtitle for '{language}' saved to {subtitle_path}")
 
-    except Exception as e:
+    except Exception as ex:
         db.rollback()
-        print(f"Error transcribing '{language}': {e}")
-        raise
+        print(f"Error transcribing {language}: {ex}")
+        raise ex
     finally:
         db.close()
+
+
+@shared_task
+def generate_subtitles_for_video(video_id: str):
+    transcribe_tasks = group(
+        transcribe_to_language.s(video_id, language, lang_code)
+        for language, lang_code in LANGUAGE_MAP.items()
+    )
+    result = transcribe_tasks.apply_sync()
+
+    print(f"started concurrent transcription for video: {video_id}")
+
+    return result.id

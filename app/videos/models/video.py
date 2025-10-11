@@ -17,6 +17,7 @@ class Video(Base, UUIDMixin, TimestampMixin):
 
     title: Mapped[str] = mapped_column(String(70), nullable=True)
     summary: Mapped[str] = mapped_column(Text, nullable=True)
+    source_language: Mapped[str] = mapped_column(String, nullable=True)
 
     user_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
@@ -29,21 +30,3 @@ class Video(Base, UUIDMixin, TimestampMixin):
     subtitles: Mapped[List["Subtitle"]] = relationship(
         "Subtitle", back_populates="video", cascade="all, delete-orphan"
     )
-    localized_versions: Mapped[List["LocalizedVideo"]] = relationship(
-        "LocalizedVideo", back_populates="video", cascade="all, delete-orphan"
-    )
-
-
-class LocalizedVideo(Base, UUIDMixin, TimestampMixin):
-    __tablename__ = "localized_videos"
-
-    language: Mapped[str] = mapped_column(nullable=False)
-    file_url: Mapped[str] = mapped_column(nullable=False)
-
-    video_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("videos.id"), nullable=False
-    )
-    video: Mapped["Video"] = relationship("Video", back_populates="localized_versions")
-
-
-from .subtitle import Subtitle

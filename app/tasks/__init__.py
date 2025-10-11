@@ -1,4 +1,5 @@
 from .trimming import trim_silence
+from .transcribing import generate_subtitles_for_video, transcribe_to_language
 from decouple import config
 
 LANGUAGE_MAP = {

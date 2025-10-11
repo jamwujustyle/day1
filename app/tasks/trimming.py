@@ -54,7 +54,7 @@ def trim_silence(temp_path: str, video_id: str):
         os.remove(temp_path)
 
         video = db.execute(select(Video).where(Video.id == video_id)).scalar_one()
-        video.file_url = f"/{final_path}"
+        video.file_url = final_path
         db.commit()
 
         # Language detection and dubbing

@@ -1,16 +1,14 @@
 from moviepy import VideoFileClip, concatenate_videoclips
 from pydub import AudioSegment, silence
-from celery import shared_task, group
+from celery import shared_task
 from sqlalchemy import select
 
 import os
 import openai
 from decouple import config
 
-from . import LANGUAGE_MAP
 from ..configs.database import SyncSessionLocal
 from ..videos.models.video import Video
-from ..videos.models.subtitle import Subtitle
 
 from app.videos.services.subtitle import SubtitleService
 

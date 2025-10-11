@@ -1,7 +1,7 @@
 from celery import Celery
 
 from app.users.models import User
-from app.videos.models.video import Video, LocalizedVideo
+from app.videos.models.video import Video
 from app.oauth.models import SocialAccount
 from app.videos.models.subtitle import Subtitle
 

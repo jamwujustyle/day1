@@ -1,21 +1,21 @@
 from celery import shared_task, group
 from sqlalchemy import select
+import asyncio
 
 from app.videos.models.subtitle import Subtitle
 from app.videos.services.subtitle import SubtitleService
 
 from ..configs.database import SyncSessionLocal
-from . import OPENAI_KEY, LANGUAGE_MAP
-
-import os
-import openai
-
-
-openai.api_key = OPENAI_KEY
 
 
 @shared_task
 def transcribe_to_language(video_id: str, language: str, lang_code: str):
+    from . import OPENAI_KEY
+
+    import openai
+
+    openai.api_key = OPENAI_KEY
+
     db = SyncSessionLocal()
 
     try:
@@ -38,7 +38,7 @@ def transcribe_to_language(video_id: str, language: str, lang_code: str):
         from moviepy import VideoFileClip
 
         clip = VideoFileClip(video.file_url)
-        clip.audio.write_audiofile(audio_path, verbose=False, logger=None)
+        clip.audio.write_audiofile(audio_path)
         clip.close()
 
         with open(audio_path, "rb") as file:
@@ -49,9 +49,16 @@ def transcribe_to_language(video_id: str, language: str, lang_code: str):
                 response_format="verbose_json",
                 timestamp_granularities=["word"],
             )
-        subtitle_service = SubtitleService(db)
-        subtitle = subtitle_service.create_subtitle_from_transcription(
-            transcription_data=transcription, video_id=video_id, language=language
+
+        from app.configs.database import AsyncSessionLocal
+
+        async_db = AsyncSessionLocal()
+        subtitle_service = SubtitleService(async_db)
+
+        asyncio.run(
+            subtitle_service.create_subtitle_from_transcription(
+                transcription_data=transcription, video_id=video_id, language=language
+            )
         )
 
     except Exception as ex:
@@ -64,11 +71,13 @@ def transcribe_to_language(video_id: str, language: str, lang_code: str):
 
 @shared_task
 def generate_subtitles_for_video(video_id: str):
+    from . import LANGUAGE_MAP
+
     transcribe_tasks = group(
         transcribe_to_language.s(video_id, language, lang_code)
         for language, lang_code in LANGUAGE_MAP.items()
     )
-    result = transcribe_tasks.apply_sync()
+    result = transcribe_tasks.apply_async()
 
     print(f"started concurrent transcription for video: {video_id}")
 

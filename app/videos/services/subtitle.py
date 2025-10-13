@@ -29,10 +29,6 @@ class SubtitleService:
                 {"word": w.word, "start": w.start, "end": w.end} for w in words_data
             ]
 
-        print(segments)
-
-        # TODO: CHANGE
-
         subtitle = await self.repo.create_subtitle(
             language=language, text=text, segments=segments, video_id=video_id
         )

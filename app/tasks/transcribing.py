@@ -12,7 +12,9 @@ from ..configs.database import SyncSessionLocal, AsyncSessionLocal
 
 
 @shared_task
-def transcribe_to_language(video_id: str, language: str, source_language: str):
+def transcribe_to_language(
+    video_id: str, language: str, lang_code: str, source_language: str
+):
     from . import OPENAI_KEY
 
     openai.api_key = OPENAI_KEY
@@ -116,7 +118,10 @@ def generate_subtitles_for_video(video_id: str, source_language: str = None):
     for language, lang_code in LANGUAGE_MAP.items():
         if source_language and source_language == language:
             continue
-        tasks.append(transcribe_to_language.s(video_id, language, source_language))
+        print(f"language={language}, lang_code={lang_code}")
+        tasks.append(
+            transcribe_to_language.s(video_id, language, lang_code, source_language)
+        )
 
     if not tasks:
         print("No new languages to transcribe.")

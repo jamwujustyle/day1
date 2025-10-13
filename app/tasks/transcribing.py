@@ -15,7 +15,7 @@ from ..configs.database import SyncSessionLocal, AsyncSessionLocal
 def transcribe_to_language(
     video_id: str, language: str, lang_code: str, source_language: str
 ):
-    from . import OPENAI_KEY
+    from . import OPENAI_KEY, TRANSLATION_PROMPT
 
     openai.api_key = OPENAI_KEY
 
@@ -37,29 +37,13 @@ def transcribe_to_language(
             source_subtitle.segments[-1]["end"] if source_subtitle.segments else 0
         )
 
-        prompt = f"""
-        You are a professional translator. Your task is to translate the given subtitles from {source_language} to {language}.
-        The total duration of the original video is {duration} seconds.
-        Your goal is to:
-        1. Translate the text to {language}.
-        2. Your primary and most critical task is to adjust the timestamps so the subtitles span the entire original video duration of {duration} seconds. The end time of the very last word MUST be approximately {duration} seconds (with a maximum leeway of 3 seconds). To achieve this, you must carefully stretch the gaps between words or slightly adjust word durations to fill the time. Do not leave a large silent gap at the end. While maintaining a natural pace is important, it is secondary to matching the total duration.
-        3. Generate a suitable title for the video in {language} (maximum 70 characters).
-        4. Generate a concise summary for the video in {language}.
-
-        Here is the source text:
-        {source_subtitle.text}
-
-        Here are the word-level timestamps (segments):
-        {json.dumps(source_subtitle.segments)}
-
-        Before you output the final JSON, double-check your work to ensure the end time of the last word in the "segments" array is within 3 seconds of {duration}. This is a strict requirement.
-
-        Please provide the output in a single JSON object with the following keys:
-        - "title": "Translated title"
-        - "summary": "Translated summary"
-        - "text": "Full translated text"
-        - "segments": [{{ "word": "translated_word", "start": start_time, "end": end_time }}]
-        """
+        prompt = TRANSLATION_PROMPT.format(
+            source_language=source_language,
+            language=language,
+            duration=duration,
+            source_text=source_subtitle.text,
+            segments=json.dumps(source_subtitle.segments),
+        )
 
         response = openai.chat.completions.create(
             model="gpt-5",  # Or "gpt-5" when available

@@ -100,14 +100,14 @@ def trim_silence(temp_path: str, video_id: str):
 
             # Generate title and summary for the source language
             prompt = f"""
-            Based on the following text, please generate a suitable title (maximum 70 characters) and a concise summary.
+            Based on the following text, please generate a suitable title (maximum 70 characters) and a concise summary in {source_lang}.
 
             Text:
             {transcription.text}
 
             Please provide the output in a single JSON object with the following keys:
-            - "title": "Generated title (maximum 70 characters)"
-            - "summary": "Generated summary"
+            - "title": "Generated title in {source_lang} (maximum 70 characters)"
+            - "summary": "Generated summary in {source_lang}"
             """
 
             response = openai.chat.completions.create(

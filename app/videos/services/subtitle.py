@@ -11,15 +11,23 @@ class SubtitleService:
     async def create_subtitle_from_transcription(
         self, transcription_data, video_id, language
     ) -> Subtitle:
-        text = transcription_data.text
-        segments = [
-            {
-                "word": w.word,
-                "start": w.start,
-                "end": w.end,
-            }
-            for w in transcription_data.words
-        ]
+        if isinstance(transcription_data, dict):
+            text = transcription_data.get("text")
+            words_data = transcription_data.get("segments", [])
+            segments = [
+                {
+                    "word": w.get("word"),
+                    "start": w.get("start"),
+                    "end": w.get("end"),
+                }
+                for w in words_data
+            ]
+        else:  # Assumes it's the OpenAI response object
+            text = transcription_data.text
+            words_data = transcription_data.words
+            segments = [
+                {"word": w.word, "start": w.start, "end": w.end} for w in words_data
+            ]
 
         print(segments)
 

@@ -1,84 +1,131 @@
 from celery import shared_task, group
 from sqlalchemy import select
 import asyncio
+import json
+import openai
 
 from app.videos.models.subtitle import Subtitle
+from app.videos.models.video import Video, VideoLocalization
 from app.videos.services.subtitle import SubtitleService
 
-from ..configs.database import SyncSessionLocal
+from ..configs.database import SyncSessionLocal, AsyncSessionLocal
 
 
 @shared_task
-def transcribe_to_language(video_id: str, language: str, lang_code: str):
+def transcribe_to_language(video_id: str, language: str, source_language: str):
     from . import OPENAI_KEY
-
-    import openai
 
     openai.api_key = OPENAI_KEY
 
     db = SyncSessionLocal()
-
     try:
-        from app.videos.models.video import Video
-
-        video = db.execute(select(Video).where(Video.id == video_id)).scalar_one()
-
-        existing = db.execute(
+        source_subtitle = db.execute(
             select(Subtitle).where(
-                (Subtitle.video_id == video_id) & (Subtitle.language == language)
+                (Subtitle.video_id == video_id) & (Subtitle.language == source_language)
             )
         ).scalar_one_or_none()
 
-        if existing:
-            print("Subtitle already exists")
+        if not source_subtitle:
+            print(
+                f"Source subtitle in {source_language} not found for video {video_id}"
+            )
             return
 
-        audio_path = f"/tmp/{video_id}_audio_{lang_code}.wav"
-
-        from moviepy import VideoFileClip
-
-        clip = VideoFileClip(video.file_url)
-        clip.audio.write_audiofile(audio_path)
-        clip.close()
-
-        with open(audio_path, "rb") as file:
-            transcription = openai.audio.transcriptions.create(
-                model="whisper-1",
-                file=file,
-                language=lang_code,
-                response_format="verbose_json",
-                timestamp_granularities=["word"],
-            )
-
-        from app.configs.database import AsyncSessionLocal
-
-        async_db = AsyncSessionLocal()
-        subtitle_service = SubtitleService(async_db)
-
-        asyncio.run(
-            subtitle_service.create_subtitle_from_transcription(
-                transcription_data=transcription, video_id=video_id, language=language
-            )
+        duration = (
+            source_subtitle.segments[-1]["end"] if source_subtitle.segments else 0
         )
+
+        prompt = f"""
+        You are a professional translator. Your task is to translate the given subtitles from {source_language} to {language}.
+        The total duration of the original video is {duration} seconds.
+        Your goal is to:
+        1. Translate the text to {language}.
+        2. Adjust the timestamps for each word to match the natural pronunciation speed in {language}.
+        3. The final timestamp of the last word must match the original video duration of {duration} seconds. Distribute the word timings naturally throughout the entire video duration. The total duration of the translated subtitles can have a maximum leeway of 3 seconds from the original {duration} seconds.
+        4. Generate a suitable title for the video in {language} (maximum 70 characters).
+        5. Generate a concise summary for the video in {language}.
+
+        Here is the source text:
+        {source_subtitle.text}
+
+        Here are the word-level timestamps (segments):
+        {json.dumps(source_subtitle.segments)}
+
+        Please provide the output in a single JSON object with the following keys:
+        - "title": "Translated title"
+        - "summary": "Translated summary"
+        - "text": "Full translated text"
+        - "segments": [{{ "word": "translated_word", "start": start_time, "end": end_time }}]
+        """
+
+        response = openai.chat.completions.create(
+            model="gpt-4-turbo",  # Or "gpt-5" when available
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that provides translations and adjusts timestamps in JSON format.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            response_format={"type": "json_object"},
+        )
+
+        result = json.loads(response.choices[0].message.content)
+
+        async def save_data():
+            async_db = AsyncSessionLocal()
+            try:
+                subtitle_service = SubtitleService(async_db)
+
+                # Create new subtitle
+                await subtitle_service.create_subtitle_from_transcription(
+                    video_id=video_id,
+                    language=language,
+                    transcription_data={
+                        "text": result["text"],
+                        "segments": result["segments"],
+                    },
+                )
+
+                # Create or update video localization
+                video_localization = VideoLocalization(
+                    video_id=video_id,
+                    language=language,
+                    title=result["title"],
+                    summary=result["summary"],
+                )
+                async_db.add(video_localization)
+                await async_db.commit()
+            finally:
+                await async_db.close()
+
+        asyncio.run(save_data())
 
     except Exception as ex:
         db.rollback()
-        print(f"Error transcribing {language}: {ex}")
+        print(f"Error translating to {language}: {ex}")
         raise ex
     finally:
         db.close()
 
 
 @shared_task
-def generate_subtitles_for_video(video_id: str):
+def generate_subtitles_for_video(video_id: str, source_language: str = None):
     from . import LANGUAGE_MAP
 
-    transcribe_tasks = group(
-        transcribe_to_language.s(video_id, language, lang_code)
-        for language, lang_code in LANGUAGE_MAP.items()
-    )
+    tasks = []
+    for language, lang_code in LANGUAGE_MAP.items():
+        if source_language and source_language == language:
+            continue
+        tasks.append(transcribe_to_language.s(video_id, language, source_language))
+
+    if not tasks:
+        print("No new languages to transcribe.")
+        return
+
+    transcribe_tasks = group(tasks)
     result = transcribe_tasks.apply_async()
 
-    print(f"started concurrent transcription for video: {video_id}")
+    print(f"Started concurrent translation for video: {video_id}")
 
     return result.id

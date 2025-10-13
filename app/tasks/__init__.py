@@ -10,7 +10,6 @@ LANGUAGE_MAP = {
     "hindi": "hi",
     "russian": "ru",
     "arabic": "ar",
-    "bengali": "bn",
     "portuguese": "pt",
 }
 

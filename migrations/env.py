@@ -16,7 +16,7 @@ from app.configs.database import Base, DATABASE_URL
 # 👇 ADD THESE IMPORTS so Alembic can "see" your models
 from app.users.models import User
 from app.oauth.models import SocialAccount
-from app.videos.models.video import Video
+from app.videos.models.video import Video, VideoLocalization
 from app.videos.models.subtitle import Subtitle
 
 # this is the Alembic Config object, which provides

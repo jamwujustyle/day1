@@ -52,6 +52,8 @@ def transcribe_to_language(
         Here are the word-level timestamps (segments):
         {json.dumps(source_subtitle.segments)}
 
+        Before you output the final JSON, double-check your work to ensure the end time of the last word in the "segments" array is within 3 seconds of {duration}. This is a strict requirement.
+
         Please provide the output in a single JSON object with the following keys:
         - "title": "Translated title"
         - "summary": "Translated summary"
@@ -60,7 +62,7 @@ def transcribe_to_language(
         """
 
         response = openai.chat.completions.create(
-            model="gpt-4-turbo",  # Or "gpt-5" when available
+            model="gpt-5",  # Or "gpt-5" when available
             messages=[
                 {
                     "role": "system",

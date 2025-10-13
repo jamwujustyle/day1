@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from ..models.subtitle import Subtitle
+from uuid import UUID
 
 
 class SubtitleRepository:
@@ -27,3 +28,9 @@ class SubtitleRepository:
         )
 
         return subtitle.scalar_one_or_none()
+
+    async def get_subtitle_by_id(self, subtitle_id: UUID) -> Subtitle:
+        result = await self.db.execute(
+            select(Subtitle).where(Subtitle.id == subtitle_id)
+        )
+        return result.scalar_one_or_none()

@@ -136,10 +136,25 @@
               videoElement.innerHTML = `
                         <h3>${video.title}</h3>
                         <p>${video.description}</p>
-                        <video controls width="600">
+                        <video controls width="600" id="video-${video.id}">
                             <source src="${video.file_url}" type="video/mp4">
-                            Your browser does not support the video tag.
                         </video>
+                        <div>
+                            <label for="subtitle-select-${
+                              video.id
+                            }">Subtitles:</label>
+                            <select id="subtitle-select-${
+                              video.id
+                            }" onchange="changeSubtitle('${video.id}')">
+                                <option value="">None</option>
+                                ${video.subtitles
+                                  .map(
+                                    (sub) =>
+                                      `<option value="${sub.id}">${sub.language}</option>`
+                                  )
+                                  .join("")}
+                            </select>
+                        </div>
                     `;
               videoList.appendChild(videoElement);
             });
@@ -153,6 +168,34 @@
           videoList.textContent = "An error occurred: " + error.message;
         }
       });
+
+      function changeSubtitle(videoId) {
+        const videoElement = document.getElementById(`video-${videoId}`);
+        const selectElement = document.getElementById(
+          `subtitle-select-${videoId}`
+        );
+        const subtitleId = selectElement.value;
+
+        // Remove existing track elements
+        const existingTracks = videoElement.querySelectorAll("track");
+        existingTracks.forEach((track) => track.remove());
+
+        if (subtitleId) {
+          const track = document.createElement("track");
+          track.kind = "subtitles";
+          // Find the selected subtitle to get its language
+          const selectedSubtitle = videoList.querySelector(
+            `option[value="${subtitleId}"]`
+          );
+          track.srclang = selectedSubtitle.textContent;
+          track.label = selectedSubtitle.textContent;
+          // This assumes you have an endpoint to serve the VTT file
+          track.src = `/videos/subtitles/${subtitleId}`;
+          track.default = true;
+          videoElement.appendChild(track);
+          videoElement.textTracks[0].mode = "showing";
+        }
+      }
     </script>
   </body>
 </html>

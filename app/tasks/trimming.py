@@ -101,6 +101,7 @@ def trim_silence(temp_path: str, video_id: str):
             # Generate title and summary for the source language
             prompt = f"""
             Based on the following text, please generate a suitable title (maximum 70 characters) and a concise summary in {source_lang}.
+            The title and summary should be written in the first person, as if the speaker in the video is writing them.
 
             Text:
             {transcription.text}

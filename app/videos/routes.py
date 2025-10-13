@@ -1,9 +1,11 @@
-from fastapi import Depends, Request, UploadFile, File, Form
+from fastapi import Depends, Request, UploadFile, File, Form, HTTPException
 from fastapi.routing import APIRouter
+from fastapi.responses import PlainTextResponse
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .services.video import VideoService
+from .services.subtitle import SubtitleService
 from .schemas.video import VideoResponse
 
 from ..users.services import get_current_user
@@ -45,3 +47,12 @@ async def get_my_videos(
 async def get_user_videos(user_id: UUID, db: AsyncSession = Depends(get_db)):
     service = VideoService(db)
     return await service.get_user_videos(user_id)
+
+
+@router.get("/subtitles/{subtitle_id}", response_class=PlainTextResponse)
+async def get_subtitle_vtt(subtitle_id: UUID, db: AsyncSession = Depends(get_db)):
+    service = SubtitleService(db)
+    vtt_content = await service.get_subtitle_as_vtt(subtitle_id)
+    if not vtt_content:
+        raise HTTPException(status_code=404, detail="Subtitle not found")
+    return vtt_content

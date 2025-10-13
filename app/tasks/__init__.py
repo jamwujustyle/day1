@@ -23,8 +23,8 @@ The total duration of the original video is {duration} seconds.
 Your goal is to:
 1. Translate the text to {language}.
 2. Your primary and most critical task is to adjust the timestamps so the subtitles span the entire original video duration of {duration} seconds. The end time of the very last word MUST be approximately {duration} seconds (with a maximum leeway of 3 seconds). To achieve this, you must carefully stretch the gaps between words or slightly adjust word durations to fill the time. Do not leave a large silent gap at the end. While maintaining a natural pace is important, it is secondary to matching the total duration.
-3. Generate a suitable title for the video in {language} (maximum 70 characters).
-4. Generate a concise summary for the video in {language}.
+3. Generate a suitable title for the video in {language} (maximum 70 characters). The title should be in the first person, as if the speaker in the video is writing it.
+4. Generate a concise summary for the video in {language}. The summary should be in the first person, as if the speaker in the video is writing it.
 
 Here is the source text:
 {source_text}

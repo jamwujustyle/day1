@@ -1,6 +1,7 @@
 from ..models.video import Video
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 
 class VideoRepository:
@@ -16,6 +17,10 @@ class VideoRepository:
         return video
 
     async def get_user_videos(self, user_id):
-        result = await self.db.execute(select(Video).where(Video.user_id == user_id))
+        result = await self.db.execute(
+            select(Video)
+            .where(Video.user_id == user_id)
+            .options(selectinload(Video.subtitles), selectinload(Video.localizations))
+        )
 
         return result.scalars().all()

@@ -55,9 +55,7 @@ class OAuthService:
             )
             return user, False
 
-        base_username = email.split("@")[0]
-
-        user = await self.user_repo.create(email=email, username=base_username)
+        user = await self.user_repo.create(email=email)
 
         await self.social_repo.create(
             user_id=user.id, email=email, provider_data=google_user_data

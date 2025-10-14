@@ -25,8 +25,10 @@ class UserRepository:
         result = await self.db.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
 
-    async def create(self, email: str, username: str) -> User:
-        user = User(email=email, username=username)
+    async def create(self, email: str) -> User:
+        base_username = email.split("@")[0]
+
+        user = User(email=email, username=base_username)
         self.db.add(user)
         await self.db.commit()
         await self.db.refresh(user)

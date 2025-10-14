@@ -54,6 +54,11 @@ async def get_user_test_page():
     return FileResponse("app/users.html")
 
 
+@app.get("/passwordless-test")
+async def get_passwordless_test_page():
+    return FileResponse("app/passwordless.html")
+
+
 app.include_router(oauth_router)
 app.include_router(auth_router)
 app.include_router(user_router)

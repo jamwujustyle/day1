@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Datetime, Boolean
+from sqlalchemy import String, DateTime, Boolean
 
 from app.core.mixins import TimestampMixin, UUIDMixin
 from app.configs.database import Base
@@ -14,7 +14,7 @@ class MagicLink(Base, TimestampMixin, UUIDMixin):
     token: Mapped[str] = mapped_column(String(255), nullable=False, unique=False)
     otp: Mapped[str] = mapped_column(String(6), default="000000")
     expires_at: Mapped[datetime] = mapped_column(
-        Datetime(timezone=True), nullable=False
+        DateTime(timezone=True), nullable=False
     )
     used: Mapped[bool] = mapped_column(Boolean, default=False)
 

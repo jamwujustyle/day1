@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..configs.database import get_db
+from ..auth.utils import set_auth_cookies
 
 from .provider import GoogleProvider
 from .services import OAuthService
@@ -45,22 +46,11 @@ async def oauth_callback(
 
     user = result["user"]
 
-    response.set_cookie(
-        key="access_token",
-        value=result["access_token"],
-        httponly=True,
-        # TODO: CHANGE IN PROD
-        secure=False,
-        samesite="lax",
-        max_age=1800,
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=result["refresh_token"],
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=604800,
-    )
+    tokens = {
+        "access_token": result["access_token"],
+        "refresh_token": result["refresh_token"],
+    }
+
+    set_auth_cookies(response, tokens)
 
     return OAuthCallbackResponse(user=user, is_new_user=result["is_new_user"])

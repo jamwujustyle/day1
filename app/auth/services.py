@@ -9,6 +9,7 @@ from ..configs.jwt import (
 )
 from ..users.repository import UserRepository
 from ..configs.database import get_db
+from .utils import set_auth_cookies
 
 
 async def refresh_access_token(
@@ -16,14 +17,7 @@ async def refresh_access_token(
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Handles the token refresh process.
-    1. Reads refresh_token from HttpOnly cookie.
-    2. Verifies the token.
-    3. Fetches the user from the database.
-    4. Creates a new access and refresh token.
-    5. Sets the new tokens in HttpOnly cookies.
-    """
+
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise HTTPException(
@@ -57,20 +51,8 @@ async def refresh_access_token(
     new_access_token = create_access_token(user.id, user.email)
     new_refresh_token = create_refresh_token(user.id)
 
-    # Set new cookies
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=False,  # Set to True in production
-        samesite="lax",
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=new_refresh_token,
-        httponly=True,
-        secure=False,  # Set to True in production
-        samesite="lax",
-    )
+    tokens = {"access_token": new_access_token, "refresh_token": new_refresh_token}
+
+    set_auth_cookies(response, tokens)
 
     return {"message": "Tokens refreshed successfully"}

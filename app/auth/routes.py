@@ -2,21 +2,14 @@ from fastapi.routing import APIRouter
 from fastapi import Response, Request, Depends
 
 from .services import refresh_access_token
-
+from .utils import clear_auth_cookies
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/logout")
 async def logout(response: Response):
-    response.delete_cookie(
-        key="access_token", httponly=True, secure=False, samesite="lax"
-    )
-
-    response.delete_cookie(
-        key="refresh_token", httponly=True, secure=False, samesite="lax"
-    )
-
+    clear_auth_cookies(response)
     return {"message": "Logout successful. Tokens have been cleared"}
 
 

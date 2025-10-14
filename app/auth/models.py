@@ -13,7 +13,9 @@ class MagicLink(Base, TimestampMixin, UUIDMixin):
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     token: Mapped[str] = mapped_column(String(255), nullable=False, unique=False)
     otp: Mapped[str] = mapped_column(String(6), default="000000")
-    expires_at: Mapped[datetime] = mapped_column(Datetime, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        Datetime(timezone=True), nullable=False
+    )
     used: Mapped[bool] = mapped_column(Boolean, default=False)
 
     @property

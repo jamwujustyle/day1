@@ -6,97 +6,40 @@ from fastapi import Depends, HTTPException, status, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-from ..configs.jwt import verify_access_token
 from ..configs.database import get_db
 from ..users.repository import UserRepository
 from ..users.models import User
+from ..configs.dependencies import get_current_user
 
 
-async def get_current_user(
-    request: Request,
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    """
-    Dependency to get current authenticated user from JWT token in cookies.
-    Use in routes like: current_user: User = Depends(get_current_user)
-    """
-    token = request.cookies.get("access_token")
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+class UserService:
+    def __init__(self, db: AsyncSession):
+        self.repo = UserRepository(db)
 
-    payload = verify_access_token(token)
+    async def get_optional_user(
+        self,
+        request: Request,
+    ) -> User | None:
+        try:
+            return await get_current_user(request, self.repo.db)
+        except HTTPException:
+            return None
 
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    async def update_avatar(self, user: User, file: UploadFile) -> User:
+        AVATAR_MEDIA_ROOT = "media/images/avatars"
+        os.makedirs(AVATAR_MEDIA_ROOT, exist_ok=True)
 
-    user_id_str = payload.get("sub")
-    if user_id_str is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        file_extension = file.filename.split(".")[-1]
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"
+        file_path = os.path.join(AVATAR_MEDIA_ROOT, unique_filename)
+        file_url = f"/{file_path}"
 
-    try:
-        user_id = uuid.UUID(user_id_str)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user ID in token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return await self.repo.update_avatar(user, file_url)
 
-    user_repo = UserRepository(db)
-    user = await user_repo.get_by_id(user_id)
+    async def update_username(self, user: User, new_username: str) -> User:
+        return await self.repo.update_username(user, new_username)
 
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return user
-
-
-async def get_optional_user(
-    request: Request,
-    db: AsyncSession = Depends(get_db),
-) -> User | None:
-    """
-    Optional authentication - returns User if valid token, None otherwise.
-    Useful for endpoints that work with or without auth.
-    """
-    try:
-        return await get_current_user(request, db)
-    except HTTPException:
-        return None
-
-
-async def update_avatar(user: User, file: UploadFile, db: AsyncSession) -> User:
-    AVATAR_MEDIA_ROOT = "media/images/avatars"
-    os.makedirs(AVATAR_MEDIA_ROOT, exist_ok=True)
-
-    file_extension = file.filename.split(".")[-1]
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    file_path = os.path.join(AVATAR_MEDIA_ROOT, unique_filename)
-    file_url = f"/{file_path}"
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    repo = UserRepository(db)
-    return await repo.update_avatar(user, file_url)
-
-
-async def update_username(user: User, new_username: str, db: AsyncSession) -> User:
-    repo = UserRepository(db)
-    return await repo.update_username(user, new_username)
+    async def get_user_by_username(self, username: str):
+        return await self.repo.get_user_by_username(username)

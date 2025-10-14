@@ -5,7 +5,7 @@ from .models import MagicLink
 from app.users.models import User
 
 
-class MagicAuthRepository:
+class PasswordlessRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 

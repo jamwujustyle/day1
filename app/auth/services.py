@@ -14,12 +14,12 @@ from ..configs.jwt import (
 from ..users.repository import UserRepository
 from ..configs.database import get_db
 from .utils import set_auth_cookies, send_auth_code_email
-from .repository import MagicAuthRepository
+from .repository import PasswordlessRepository
 
 
-class MagicAuthService:
+class PasswordlessService:
     def __init__(self, db: AsyncSession = Depends(get_db)):
-        self.repo = MagicAuthRepository(db)
+        self.repo = PasswordlessRepository(db)
 
     async def request_magic_link(self, email: str):
         token = secrets.token_urlsafe(32)
@@ -29,6 +29,7 @@ class MagicAuthService:
         await self.repo.create_magic_link(
             email=email, otp=otp, token=token, expires_at=expires_at
         )
+        # TODO: ADJUST URL
         magic_link_url = f"{config('FRONTEND_URL')}/auth/verify/{token}"
         await send_auth_code_email(
             email=email, magic_link_url=magic_link_url, otp_code=otp

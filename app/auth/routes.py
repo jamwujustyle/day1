@@ -3,7 +3,7 @@ from fastapi import Response, Request, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .services import refresh_access_token, MagicAuthService
+from .services import refresh_access_token, PasswordlessService
 from .utils import clear_auth_cookies, set_auth_cookies
 from .schemas import AuthCodeRequest, TokenRequest, OTPVerifyRequest
 
@@ -31,7 +31,7 @@ async def refresh_token_endpoint(
 async def request_auth_code(
     payload: AuthCodeRequest, db: AsyncSession = Depends(get_db)
 ):
-    service = MagicAuthService(db)
+    service = PasswordlessService(db)
     await service.request_magic_link(email=payload.email)
 
     return JSONResponse(
@@ -43,7 +43,7 @@ async def request_auth_code(
 async def verify_magic_link(
     payload: TokenRequest, response: Response, db=Depends(get_db)
 ) -> UserResponse:
-    service = MagicAuthService(db)
+    service = PasswordlessService(db)
     user = await service.verify_magic_link(token=payload.token)
 
     access_token = create_access_token(user.id, user.email)
@@ -59,7 +59,7 @@ async def verify_magic_link(
 async def verify_otp(
     payload: OTPVerifyRequest, response: Response, db: AsyncSession = Depends(get_db)
 ) -> UserResponse:
-    service = MagicAuthService(db)
+    service = PasswordlessService(db)
     user = await service.verify_otp(otp_code=payload.otp_code, email=payload.email)
 
     access_token = create_access_token(user.id, user.email)

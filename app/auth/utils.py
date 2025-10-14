@@ -1,12 +1,10 @@
 from fastapi.responses import Response
 from ..configs.jwt import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
-
+from ..configs.settings import get_settings
 from decouple import config
 import resend
 
-SECURE_COOKIES = config("SECURE_COOKIES", default=False, cast=bool)
-
-FROM_EMAIL = "onboarding@resend.dev"
+settings = get_settings()
 
 
 def set_auth_cookies(response: Response, tokens: dict) -> Response:
@@ -16,7 +14,7 @@ def set_auth_cookies(response: Response, tokens: dict) -> Response:
         value=tokens["access_token"],
         max_age=ACCESS_TOKEN_EXPIRE * 60,
         httponly=True,
-        secure=SECURE_COOKIES,
+        secure=settings.SECURE_COOKIES,
         samesite="lax",
         path="/",
     )
@@ -25,7 +23,7 @@ def set_auth_cookies(response: Response, tokens: dict) -> Response:
         value=tokens["refresh_token"],
         max_age=REFRESH_TOKEN_EXPIRE * 24 * 60 * 60,
         httponly=True,
-        secure=SECURE_COOKIES,  # Set to True in production
+        secure=settings.SECURE_COOKIES,  # Set to True in production
         samesite="lax",
         path="/",
     )
@@ -38,14 +36,14 @@ def clear_auth_cookies(response: Response) -> Response:
     response.delete_cookie(
         "access_token",
         path="/",
-        secure=SECURE_COOKIES,
+        secure=settings.SECURE_COOKIES,
         samesite="lax",
     )
 
     response.delete_cookie(
         "refresh_token",
         path="/",
-        secure=SECURE_COOKIES,
+        secure=settings.SECURE_COOKIES,
         samesite="lax",
     )
 
@@ -70,7 +68,7 @@ async def send_auth_code_email(email, magic_link_url, otp_code):
 
         resend.Emails.send(
             {
-                "from": FROM_EMAIL,
+                "from": settings.FROM_EMAIL,
                 "to": email,
                 "subject": subject,
                 "html": html_content,

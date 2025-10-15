@@ -112,7 +112,7 @@ def trim_silence(temp_path: str, video_id: str):
             """
 
             response = openai.chat.completions.create(
-                model="gpt-4-turbo",
+                model="gpt-5",
                 messages=[
                     {
                         "role": "system",
@@ -126,7 +126,7 @@ def trim_silence(temp_path: str, video_id: str):
             result = json.loads(response.choices[0].message.content)
 
             # Create a VideoLocalization for the source language
-            from app.videos.models.video import VideoLocalization
+            from app.videos.models import VideoLocalization
 
             source_localization = VideoLocalization(
                 video_id=video_id,

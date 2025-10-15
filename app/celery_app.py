@@ -1,9 +1,8 @@
 from celery import Celery
 
 from app.users.models import User
-from app.videos.models.video import Video
+from app.videos.models import Video, Subtitle
 from app.oauth.models import SocialAccount
-from app.videos.models.subtitle import Subtitle
 
 
 celery_app = Celery(

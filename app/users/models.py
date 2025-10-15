@@ -36,3 +36,6 @@ class User(Base, UUIDMixin):
     videos: Mapped[list["Video"]] = relationship(
         "Video", back_populates="user", cascade="all, delete-orphan"
     )
+    logs: Mapped[list["Log"]] = relationship(
+        "Log", back_populates="logs", cascade="all, delete-orphan"
+    )

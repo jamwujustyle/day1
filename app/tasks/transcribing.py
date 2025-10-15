@@ -4,8 +4,7 @@ import asyncio
 import json
 import openai
 
-from app.videos.models.subtitle import Subtitle
-from app.videos.models.video import Video, VideoLocalization
+from app.videos.models import VideoLocalization, Subtitle
 from app.videos.services.subtitle import SubtitleService
 
 from ..configs.database import SyncSessionLocal, AsyncSessionLocal
@@ -36,6 +35,12 @@ def transcribe_to_language(
         duration = (
             source_subtitle.segments[-1]["end"] if source_subtitle.segments else 0
         )
+        english_instructions = ""
+        json_keys = ""
+
+        if language.lower() == "english":
+            english_instructions = "\n5. Generate a compressed context—a very brief version that captures the core essence of the text while remaining extremely short."
+            json_keys = "\n- 'compressed_context': 'context_text'"
 
         prompt = TRANSLATION_PROMPT.format(
             source_language=source_language,
@@ -43,6 +48,8 @@ def transcribe_to_language(
             duration=duration,
             source_text=source_subtitle.text,
             segments=json.dumps(source_subtitle.segments),
+            json_keys=json_keys,
+            english_instructions=english_instructions,
         )
 
         response = openai.chat.completions.create(

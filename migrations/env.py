@@ -17,8 +17,8 @@ from app.configs.database import Base, DATABASE_URL
 from app.users.models import User
 from app.oauth.models import SocialAccount
 from app.auth.models import MagicLink
-from app.videos.models.video import Video, VideoLocalization
-from app.videos.models.subtitle import Subtitle
+from app.videos.models import Video, VideoLocalization, Subtitle
+from app.logs.models import Log, Project, UserContext
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

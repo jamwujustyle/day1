@@ -15,7 +15,7 @@ from .users.routes import router as user_router
 from .videos.routes import router as video_router
 
 # Import all models to ensure SQLAlchemy mapper registry is populated
-from .logs.models import Log, Project, UserContext
+from .logs.models import Log, Thread, UserContext
 from .videos.models import Video, VideoLocalization, Subtitle
 from .users.models import User
 from .auth.models import MagicLink

@@ -5,8 +5,8 @@ import json
 import openai
 
 from app.videos.models import VideoLocalization, Subtitle
-from app.videos.services.subtitle import SubtitleService
-from app.logs.services.log import LogService
+from app.videos.services import SubtitleService, VideoService
+from app.logs.services import LogService
 
 from ..configs.database import SyncSessionLocal, AsyncSessionLocal
 
@@ -73,6 +73,7 @@ def transcribe_to_language(
             async_db = AsyncSessionLocal()
             try:
                 subtitle_service = SubtitleService(async_db)
+                video_service = VideoService(async_db)
 
                 # Create new subtitle
                 await subtitle_service.create_subtitle_from_transcription(
@@ -83,16 +84,25 @@ def transcribe_to_language(
                         "segments": result["segments"],
                     },
                 )
-
-                # Create or update video localization
-                video_localization = VideoLocalization(
+                # create localization
+                await video_service.create_localization(
                     video_id=video_id,
                     language=language,
                     title=result["title"],
                     summary=result["summary"],
                 )
-                async_db.add(video_localization)
-                await async_db.commit()
+                # runs conditionally
+                if language.lower() == "english" and "compressed_language" in result:
+                    video = video_service.get_video_by_id(video_id)
+                    if video:
+                        log_service = LogService(async_db)
+
+                        log_service.create_log(
+                            compressed_context=result["compressed_context"],
+                            user_id=video.user_id,
+                            video_id=video_id,
+                            thread_id=getattr(video),
+                        )
             finally:
                 await async_db.close()
 

@@ -1,4 +1,3 @@
-import os
 import uuid
 import shutil
 from typing import List
@@ -6,9 +5,10 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...users.models import User
-from ..schemas.video import VideoResponse
-from ..repositories.video import VideoRepository
-from ..models.video import Video
+
+from ..schemas import VideoResponse
+from ..repositories import VideoRepository
+from ..models import Video, VideoLocalization
 
 from app.celery_app import celery_app
 
@@ -62,3 +62,13 @@ class VideoService:
             response_videos.append(video_data)
 
         return response_videos
+
+    async def get_video_by_id(self, video_id: uuid.UUID):
+        return await self.repo.get_video_by_id(video_id)
+
+    async def create_localization(
+        self, video_id: uuid.UUID, language: str, summary: str, title: str
+    ) -> VideoLocalization:
+        return await self.repo.create_localization(
+            video_id=video_id, language=language, summary=summary, title=title
+        )

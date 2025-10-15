@@ -19,7 +19,7 @@ from app.auth.models import MagicLink
 from app.oauth.models import SocialAccount
 
 # Import models - order matters to resolve relationships
-from app.logs.models import Log, Project, UserContext
+from app.logs.models import Log, Thread, UserContext
 from app.videos.models import Video, VideoLocalization, Subtitle
 from app.users.models import User
 

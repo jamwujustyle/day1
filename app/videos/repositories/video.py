@@ -1,7 +1,9 @@
-from ..models.video import Video
+from ..models import Video, VideoLocalization
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from uuid import UUID
 
 
 class VideoRepository:
@@ -31,3 +33,22 @@ class VideoRepository:
         )
 
         return result.scalars().all()
+
+    async def get_video_by_id(self, video_id: UUID):
+
+        video = await self.db.execute(select(Video).where(Video.id == video_id))
+
+        return video.scalar_one_or_none()
+
+    async def create_localization(
+        self, video_id: UUID, language: str, title: str, summary: str
+    ) -> VideoLocalization:
+        video_localization = VideoLocalization(
+            video_id=video_id, language=language, title=title, summary=summary
+        )
+
+        self.db.add(video_localization)
+        await self.db.commit()
+        await self.db.refresh(video_localization)
+
+        return video_localization

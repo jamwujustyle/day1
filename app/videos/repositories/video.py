@@ -14,7 +14,14 @@ class VideoRepository:
         self.db.add(video)
         await self.db.commit()
         await self.db.refresh(video)
-        return video
+
+        # Re-fetch the video with eagerly loaded relationships
+        result = await self.db.execute(
+            select(Video)
+            .where(Video.id == video.id)
+            .options(selectinload(Video.subtitles), selectinload(Video.localizations))
+        )
+        return result.scalars().one()
 
     async def get_user_videos(self, user_id):
         result = await self.db.execute(

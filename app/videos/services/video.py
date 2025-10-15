@@ -30,7 +30,7 @@ class VideoService:
 
         video = await self.repo.create_video(user_id=user.id, file_url="pending")
         celery_app.send_task(
-            "app.tasks.trimming.trim_silence", args=[temp_path, str(video.id), user.id]
+            "app.tasks.trimming.trim_silence", args=[temp_path, str(video.id)]
         )
 
         return VideoResponse.model_validate(video)

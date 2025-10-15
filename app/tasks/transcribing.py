@@ -6,6 +6,7 @@ import openai
 
 from app.videos.models import VideoLocalization, Subtitle
 from app.videos.services.subtitle import SubtitleService
+from app.logs.services.log import LogService
 
 from ..configs.database import SyncSessionLocal, AsyncSessionLocal
 
@@ -51,6 +52,8 @@ def transcribe_to_language(
             json_keys=json_keys,
             english_instructions=english_instructions,
         )
+        if language.lower() == "english":
+            print(f"english prompt:\n{prompt}")
 
         response = openai.chat.completions.create(
             model="gpt-5",  # Or "gpt-5" when available

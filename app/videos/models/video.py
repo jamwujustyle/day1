@@ -7,9 +7,11 @@ from typing import List, TYPE_CHECKING
 from ...core.mixins import UUIDMixin, TimestampMixin
 from ...configs.database import Base
 
+
 if TYPE_CHECKING:
-    from ...users.models import User
-    from .subtitle import Subtitle
+    from app.users.models import User
+    from app.logs.models import Log
+    from . import Subtitle
 
 
 class Video(Base, UUIDMixin, TimestampMixin):

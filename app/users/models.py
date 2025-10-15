@@ -8,10 +8,8 @@ from ..configs.database import Base
 from ..core.mixins import UUIDMixin
 
 if TYPE_CHECKING:
-    from ..videos.models import Video
-    from ..logs.models import Log
-    from ..logs.models import Project
-    from ..logs.models import UserContext
+    from app.videos.models import Video
+    from app.logs.models import Log, Project, UserContext
 
 
 class User(Base, UUIDMixin):

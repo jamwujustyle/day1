@@ -31,6 +31,9 @@ class Video(Base, UUIDMixin, TimestampMixin):
     localizations: Mapped[List["VideoLocalization"]] = relationship(
         "VideoLocalization", back_populates="video", cascade="all, delete-orphan"
     )
+    log: Mapped[List["Log"]] = relationship(
+        "Log", back_populates="video", cascade="all, delete-orphan"
+    )
 
 
 class VideoLocalization(Base, UUIDMixin, TimestampMixin):

@@ -1,2 +1,2 @@
-from ..models.subtitle import Subtitle
-from ..models.video import Video, VideoLocalization
+from .subtitle import Subtitle
+from .video import Video, VideoLocalization

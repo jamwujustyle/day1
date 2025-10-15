@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from datetime import datetime, timezone
 from sqlalchemy import String, TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -6,6 +6,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..configs.database import Base
 from ..core.mixins import UUIDMixin
+
+if TYPE_CHECKING:
+    from ..videos.models import Video
+    from ..logs.models import Log
+    from ..logs.models import Project
+    from ..logs.models import UserContext
 
 
 class User(Base, UUIDMixin):
@@ -37,5 +43,11 @@ class User(Base, UUIDMixin):
         "Video", back_populates="user", cascade="all, delete-orphan"
     )
     logs: Mapped[list["Log"]] = relationship(
-        "Log", back_populates="logs", cascade="all, delete-orphan"
+        "Log", back_populates="user", cascade="all, delete-orphan"
+    )
+    projects: Mapped[list["Project"]] = relationship(
+        "Project", back_populates="user", cascade="all, delete-orphan"
+    )
+    user_contexts: Mapped[list["UserContext"]] = relationship(
+        "UserContext", back_populates="user", cascade="all, delete-orphan"
     )

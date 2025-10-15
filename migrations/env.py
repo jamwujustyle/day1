@@ -14,11 +14,14 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), ".."
 from app.configs.database import Base, DATABASE_URL
 
 # 👇 ADD THESE IMPORTS so Alembic can "see" your models
-from app.users.models import User
-from app.oauth.models import SocialAccount
+# Import in order to avoid circular dependency issues
 from app.auth.models import MagicLink
-from app.videos.models import Video, VideoLocalization, Subtitle
+from app.oauth.models import SocialAccount
+
+# Import models - order matters to resolve relationships
 from app.logs.models import Log, Project, UserContext
+from app.videos.models import Video, VideoLocalization, Subtitle
+from app.users.models import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

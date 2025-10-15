@@ -14,6 +14,13 @@ from .auth.routes import router as auth_router
 from .users.routes import router as user_router
 from .videos.routes import router as video_router
 
+# Import all models to ensure SQLAlchemy mapper registry is populated
+from .logs.models import Log, Project, UserContext
+from .videos.models import Video, VideoLocalization, Subtitle
+from .users.models import User
+from .auth.models import MagicLink
+from .oauth.models import SocialAccount
+
 app = FastAPI(title="logg", version="1.0.0")
 MEDIA_ROOT = Path(config("MEDIA_ROOT"))
 MEDIA_URL = config("MEDIA_URL")

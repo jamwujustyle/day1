@@ -7,14 +7,14 @@ from decouple import config
 DATABASE_URL = config("DATABASE_URL", None)
 
 sync_engine = create_sync_engine(
-    DATABASE_URL.replace("+asyncpg", ""), echo=True, pool_size=5
+    DATABASE_URL.replace("+asyncpg", ""), echo=False, pool_size=5
 )
 
 SyncSessionLocal = sessionmaker(bind=sync_engine)
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,
+    echo=False,
     future=True,
     pool_size=10,
     max_overflow=5,

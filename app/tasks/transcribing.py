@@ -169,25 +169,18 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
                 subtitle_service = SubtitleService(async_db)
                 video_service = VideoService(async_db)
                 for lang, data in response_data.translations.items():
-                    if lang == source_language:
-                        await video_service.update_localization(
-                            video_id=video_id,
-                            language=lang,
-                            title=data.title,
-                            summary=data.summary,
-                        )
-                    else:
+                    if data.text and data.segments:
                         await subtitle_service.create_subtitle_from_transcription(
                             video_id=video_id,
                             language=lang,
                             transcription_data=data,
                         )
-                        await video_service.create_localization(
-                            video_id=video_id,
-                            language=lang,
-                            title=data.title,
-                            summary=data.summary,
-                        )
+                    await video_service.create_localization(
+                        video_id=video_id,
+                        language=lang,
+                        title=data.title,
+                        summary=data.summary,
+                    )
             finally:
                 await async_db.close()
 

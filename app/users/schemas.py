@@ -1,4 +1,4 @@
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict, EmailStr
 from datetime import datetime
 from uuid import UUID
 
@@ -8,7 +8,7 @@ from typing import Optional
 
 class UserResponse(BaseModel):
     id: UUID = Field(..., description="Unique identifier of the User")
-    email: str = Field(..., description="User's email address")
+    email: EmailStr = Field(..., description="User's email address")
     username: str = Field(..., description="User's username")
     avatar: Optional[str] = Field(None, description="URL to the user's avatar image")
 

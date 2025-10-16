@@ -63,7 +63,7 @@ class VideoService:
 
         return response_videos
 
-    async def get_video_by_id(self, video_id: uuid.UUID):
+    async def get_video_by_id(self, video_id: uuid.UUID) -> Video:
         return await self.repo.get_video_by_id(video_id)
 
     async def create_localization(
@@ -72,3 +72,13 @@ class VideoService:
         return await self.repo.create_localization(
             video_id=video_id, language=language, summary=summary, title=title
         )
+
+    async def update_localization(
+        self, video_id: uuid.UUID, language: str, summary: str, title: str
+    ) -> VideoLocalization:
+        return await self.repo.update_localization(
+            video_id=video_id, language=language, summary=summary, title=title
+        )
+
+    async def update_video_url(self, video_id: uuid.UUID, file_url: str) -> Video:
+        return await self.repo.update_video_url(video_id=video_id, file_url=file_url)

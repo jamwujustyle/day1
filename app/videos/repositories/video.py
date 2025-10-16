@@ -52,3 +52,30 @@ class VideoRepository:
         await self.db.refresh(video_localization)
 
         return video_localization
+
+    async def update_video_url(self, video_id: UUID, file_url: str) -> Video:
+        video = await self.get_video_by_id(video_id)
+        if video:
+            video.file_url = file_url
+            await self.db.commit()
+            await self.db.refresh(video)
+        return video
+
+    async def update_localization(
+        self, video_id: UUID, language: str, title: str, summary: str
+    ) -> VideoLocalization:
+        result = await self.db.execute(
+            select(VideoLocalization).where(
+                (VideoLocalization.video_id == video_id)
+                & (VideoLocalization.language == language)
+            )
+        )
+        video_localization = result.scalar_one_or_none()
+
+        if video_localization:
+            video_localization.title = title
+            video_localization.summary = summary
+            await self.db.commit()
+            await self.db.refresh(video_localization)
+
+        return video_localization

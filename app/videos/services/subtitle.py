@@ -1,7 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from ..models.subtitle import Subtitle
-from ..repositories.subtitle import SubtitleRepository
+from ..repositories.subtitle import SubtitleRepository, get_subtitle_sync
+from ..schemas.ai import AITranslation
 from uuid import UUID
 
 
@@ -10,31 +12,22 @@ class SubtitleService:
         self.repo = SubtitleRepository(db)
 
     async def create_subtitle_from_transcription(
-        self, transcription_data, video_id, language
+        self, transcription_data: AITranslation, video_id: UUID, language: str
     ) -> Subtitle:
-        if isinstance(transcription_data, dict):
-            text = transcription_data.get("text")
-            words_data = transcription_data.get("segments", [])
-            segments = [
-                {
-                    "word": w.get("word"),
-                    "start": w.get("start"),
-                    "end": w.get("end"),
-                }
-                for w in words_data
-            ]
-        else:  # Assumes it's the OpenAI response object
-            text = transcription_data.text
-            words_data = transcription_data.words
-            segments = [
-                {"word": w.word, "start": w.start, "end": w.end} for w in words_data
-            ]
-
+        segments = [
+            {"word": s.word, "start": s.start, "end": s.end}
+            for s in transcription_data.segments
+        ]
         subtitle = await self.repo.create_subtitle(
-            language=language, text=text, segments=segments, video_id=video_id
+            language=language,
+            text=transcription_data.text,
+            segments=segments,
+            video_id=video_id,
         )
-
         return subtitle
+
+    async def get_subtitle(self, language, video_id) -> Subtitle:
+        return await self.repo.get_subtitle(language, video_id)
 
     async def get_subtitle_as_vtt(self, subtitle_id: UUID) -> str:
         subtitle = await self.repo.get_subtitle_by_id(subtitle_id)
@@ -64,3 +57,9 @@ class SubtitleService:
         minutes, seconds = divmod(seconds, 60)
         hours, minutes = divmod(minutes, 60)
         return f"{int(hours):02}:{int(minutes):02}:{seconds:06.3f}"
+
+
+def get_subtitle_sync_service(
+    db: Session, video_id: str, language: str
+) -> Subtitle | None:
+    return get_subtitle_sync(db, video_id, language)

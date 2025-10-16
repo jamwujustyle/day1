@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from ..models.subtitle import Subtitle
@@ -34,3 +35,11 @@ class SubtitleRepository:
             select(Subtitle).where(Subtitle.id == subtitle_id)
         )
         return result.scalar_one_or_none()
+
+
+def get_subtitle_sync(db: Session, video_id: str, language: str) -> Subtitle | None:
+    return db.execute(
+        select(Subtitle).where(
+            (Subtitle.video_id == video_id) & (Subtitle.language == language)
+        )
+    ).scalar_one_or_none()

@@ -99,24 +99,27 @@ Since there are no existing threads, decide if this video content is substantial
 
 **Response Format (JSON):**
 {{
-    "has_match": false,
+    "match_found": false,
     "matched_thread_index": null,
-    "should_create_thread": true/false,
-    "reasoning": "Brief explanation of your decision",
-    "thread_metadata": {{
-        "name": "Thread name (max 60 chars)",
+    "update_required": false,
+    "updated_metadata": null,
+    "should_create_new_thread": true/false,
+    "new_thread_metadata": {{
+        "name": "New thread name (max 60 chars)",
         "summary": "Brief summary (max 200 chars)",
-        "keywords": ["keyword1", "keyword2", "keyword3"]
-    }} (only if should_create_thread is true, otherwise null)
+        "keywords": ["keyword1", "keyword2"]
+    }} (null if a new thread should not be created),
+    "reasoning": "Brief explanation of your decision process."
 }}
 
-**Guidelines for "should_create_thread":**
-- true: Content is informative, reusable knowledge, part of a larger topic
-- false: Casual/trivial content, test videos, low-value content
+**Guidelines for "should_create_new_thread":**
+- true: Content is informative, reusable knowledge, part of a larger topic.
+- false: Casual/trivial content, test videos, low-value content.
 """
 
             response = openai.chat.completions.create(
-                model="gpt-5",
+                # FIXME: TOGGLE MODELS
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system",

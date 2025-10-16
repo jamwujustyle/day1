@@ -52,7 +52,7 @@ def transcribe_to_english(video_id: str, source_language: str):
                 {"role": "user", "content": prompt},
             ],
             response_format={"type": "json_object"},
-            # prompt_cache_key=
+            prompt_cache_key="english_translation",
         )
 
         response_data = AITranslation.model_validate_json(
@@ -156,6 +156,7 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
                 {"role": "user", "content": prompt},
             ],
             response_format={"type": "json_object"},
+            prompt_cache_key="batch_translation",
         )
 
         response_data = AIMultiLanguageTranslation.model_validate_json(

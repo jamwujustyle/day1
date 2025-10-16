@@ -1,5 +1,7 @@
 from .trimming import trim_silence
+from .threading import process_log_threading
 from .transcribing import generate_subtitles_for_video, transcribe_to_language
+
 from decouple import config
 
 LANGUAGE_MAP = {

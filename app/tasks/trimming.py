@@ -83,17 +83,17 @@ def trim_silence(temp_path: str, video_id: str):
             from app.configs.database import AsyncSessionLocal
             import asyncio
 
-            async_db = AsyncSessionLocal()
-            subtitle_service = SubtitleService(async_db)
-
             # Properly await the async method
-            asyncio.run(
-                subtitle_service.create_subtitle_from_transcription(
-                    transcription_data=transcription,
-                    video_id=video_id,
-                    language=source_lang,
-                )
-            )
+            async def process_subtitle():
+                async with AsyncSessionLocal() as async_db:
+                    subtitle_service = SubtitleService(async_db)
+                    await subtitle_service.create_subtitle_from_transcription(
+                        transcription_data=transcription,
+                        video_id=video_id,
+                        language=source_lang,
+                    )
+
+            asyncio.get_event_loop().run_until_complete(process_subtitle())
 
             video.source_language = source_lang
             db.commit()

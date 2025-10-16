@@ -40,7 +40,7 @@ def transcribe_to_language(
         json_keys = ""
 
         if language.lower() == "english":
-            english_instructions = "\n5. Generate a compressed context—a very brief version that captures the core essence of the text while remaining extremely short."
+            english_instructions = "\n5. Generate a compressed context — a concise yet complete version that preserves all key information while removing unnecessary detail."
             json_keys = "\n- 'compressed_context': 'context_text'"
 
         prompt = TRANSLATION_PROMPT.format(
@@ -92,21 +92,37 @@ def transcribe_to_language(
                     summary=result["summary"],
                 )
                 # runs conditionally
-                if language.lower() == "english" and "compressed_language" in result:
-                    video = video_service.get_video_by_id(video_id)
+                if language.lower() == "english" and "compressed_context" in result:
+                    from app.configs.logging_config import logger
+
+                    logger.critical("entered if english block")
+                    from app.videos.models import Video
+                    from app.logs.services import LogService
+                    from . import process_log_threading
+
+                    video: Video = await async_db.get(Video, video_id)
+
                     if video:
                         log_service = LogService(async_db)
-
-                        log_service.create_log(
+                        log = await log_service.create_log(
                             compressed_context=result["compressed_context"],
                             user_id=video.user_id,
                             video_id=video_id,
-                            thread_id=getattr(video),
+                        )
+                        print(
+                            f"log created for video with context: {video_id}: {log.id}: {result['compressed_context']}"
+                        )
+
+                        process_log_threading.delay(
+                            log_id=str(log.id),
+                            compressed_context=result["compressed_context"],
+                            user_id=str(video.user_id),
                         )
             finally:
                 await async_db.close()
 
-        asyncio.run(save_data())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(save_data())
 
     except Exception as ex:
         db.rollback()
@@ -120,22 +136,30 @@ def transcribe_to_language(
 def generate_subtitles_for_video(video_id: str, source_language: str = None):
     from . import LANGUAGE_MAP
 
-    tasks = []
+    # Prioritize English transcription for faster threading
+    if "english" in LANGUAGE_MAP and source_language != "english":
+        print(f"Prioritizing English transcription for video: {video_id}")
+        transcribe_to_language.apply_async(
+            args=[video_id, "english", LANGUAGE_MAP["english"], source_language]
+        )
+
+    # Schedule other languages to run concurrently
+    other_languages_tasks = []
     for language, lang_code in LANGUAGE_MAP.items():
-        if source_language and source_language == language:
+        if (source_language and source_language == language) or language == "english":
             continue
-        print(f"language={language}, lang_code={lang_code}")
-        tasks.append(
+        print(f"Scheduling transcription for {language} (video: {video_id})")
+        other_languages_tasks.append(
             transcribe_to_language.s(video_id, language, lang_code, source_language)
         )
 
-    if not tasks:
-        print("No new languages to transcribe.")
+    if not other_languages_tasks:
+        print("No other languages to transcribe.")
         return
 
-    transcribe_tasks = group(tasks)
+    transcribe_tasks = group(other_languages_tasks)
     result = transcribe_tasks.apply_async()
 
-    print(f"Started concurrent translation for video: {video_id}")
+    print(f"Started concurrent translation for other languages for video: {video_id}")
 
     return result.id

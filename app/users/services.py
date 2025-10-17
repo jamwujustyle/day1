@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+from typing import List
 
 from fastapi import Depends, HTTPException, status, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,3 +44,6 @@ class UserService:
 
     async def get_user_by_username(self, username: str):
         return await self.repo.get_user_by_username(username)
+
+    async def fetch_active_users(self) -> List[User]:
+        return await self.repo.fetch_active_users()

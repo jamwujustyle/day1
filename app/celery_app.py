@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from app.users.models import User
 from app.videos.models import Video, Subtitle
@@ -12,5 +13,12 @@ celery_app = Celery(
     backend="redis://redis:6379/0",
     include=["app.tasks"],
 )
+
+celery_app.conf.beat_schedule = {
+    "update-users-context": {
+        "task": "app.tasks.update_users_context",
+        "schedule": crontab(hour=0, minute=0),
+    }
+}
 
 celery_app.autodiscover_tasks(["app.tasks"])

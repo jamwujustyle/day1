@@ -2,11 +2,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from .models import User
+from app.logs.models import Log
 
-from typing import Optional
+from typing import Optional, List
 import uuid
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 
 class UserRepository:
@@ -49,3 +50,14 @@ class UserRepository:
     async def update_last_active(self, user: User) -> None:
         user.last_active_at = datetime.now(timezone.utc)
         await self.db.commit()
+
+    async def fetch_active_users(self) -> List[uuid.UUID]:
+        time_threshold = datetime.now(timezone.utc) - timedelta(hours=24)
+
+        result = await self.db.execute(
+            select(User.id)
+            .join(User.logs)
+            .where(Log.created_at >= time_threshold)
+            .distinct()
+        )
+        return result.scalars().all()

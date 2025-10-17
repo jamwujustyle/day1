@@ -45,5 +45,5 @@ class UserService:
     async def get_user_by_username(self, username: str):
         return await self.repo.get_user_by_username(username)
 
-    async def fetch_active_users(self) -> List[User]:
+    async def fetch_active_users(self) -> List[uuid.UUID]:
         return await self.repo.fetch_active_users()

@@ -49,7 +49,8 @@ def transcribe_source_audio(video_id: str, audio_path: str):
                 video.source_language = source_lang
                 await async_db.commit()
 
-        asyncio.run(process_subtitle())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(process_subtitle())
 
     # Trigger the next step in the pipeline
     generate_subtitles_for_video.delay(video_id=video_id, source_language=source_lang)

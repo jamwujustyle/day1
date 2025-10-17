@@ -11,9 +11,11 @@ def update_users_context():
     async def process_active_users():
         async with AsyncSessionLocal() as session:
             user_service = UserService(session)
-            active_users = await user_service.fetch_active_users()
+            context_service = UserContextService(session)
 
-            if not active_users:
+            active_user_ids = await user_service.fetch_active_users()
+
+            if not active_user_ids:
                 return
 
-            try:
+            context_to_update = context_service(active_user_ids)

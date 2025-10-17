@@ -201,4 +201,5 @@ Since there are no existing threads, decide if this video content is substantial
         finally:
             await async_db.close()
 
-    asyncio.run(analyze_and_thread())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(analyze_and_thread())

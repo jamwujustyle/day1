@@ -55,7 +55,8 @@ def trim_silence(temp_path: str, video_id: str):
                     video_id=video_id, file_url=final_path
                 )
 
-        asyncio.run(update_video_url())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(update_video_url())
 
         # Language detection and dubbing
         trimmed_audio_path = f"/tmp/trimmed_audio_for_dubbing_{unique_id}.wav"

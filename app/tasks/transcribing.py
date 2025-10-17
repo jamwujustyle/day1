@@ -95,8 +95,7 @@ def transcribe_to_english(video_id: str, source_language: str):
             finally:
                 await async_db.close()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(save_data())
+        asyncio.run(save_data())
 
         # Trigger the next task for other languages
         transcribe_other_languages_batch.delay(
@@ -180,8 +179,7 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
             finally:
                 await async_db.close()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(save_data())
+        asyncio.run(save_data())
 
     except Exception as ex:
         db.rollback()

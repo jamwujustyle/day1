@@ -7,6 +7,13 @@ from app.configs.database import AsyncSessionLocal
 
 @shared_task
 def update_users_context():
-    async_db = AsyncSessionLocal()
 
-    user_service = UserService(async_db)
+    async def process_active_users():
+        async with AsyncSessionLocal() as session:
+            user_service = UserService(session)
+            active_users = await user_service.fetch_active_users()
+
+            if not active_users:
+                return
+
+            try:

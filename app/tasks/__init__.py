@@ -6,6 +6,7 @@ from .transcribing import (
     transcribe_to_english,
     transcribe_other_languages_batch,
 )
+import openai
 from .prompts import TRANSLATION_PROMPT, MULTI_LANGUAGE_TRANSLATION_PROMPT
 
 from app.configs.settings import get_settings
@@ -25,3 +26,4 @@ LANGUAGE_MAP = {
 
 MEDIA_ROOT = "media/videos"
 OPENAI_KEY = settings.OPENAI_API_KEY
+openai.api_key = OPENAI_KEY

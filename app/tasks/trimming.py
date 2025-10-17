@@ -4,9 +4,6 @@ from celery import shared_task
 
 import os
 import uuid
-import openai
-import json
-from decouple import config
 
 import asyncio
 from ..configs.database import AsyncSessionLocal
@@ -14,11 +11,6 @@ from ..videos.services import VideoService
 
 
 MEDIA_ROOT = "media/videos"
-OPENAI_KEY = config(
-    "OPENAI_API_KEY",
-    default="",
-)
-openai.api_key = OPENAI_KEY
 
 
 @shared_task

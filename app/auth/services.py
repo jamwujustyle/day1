@@ -4,7 +4,6 @@ from fastapi import Request, Response, HTTPException, status, Depends
 from fastapi.exceptions import HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from decouple import config
 
 from ..configs.jwt import (
     verify_refresh_token,
@@ -15,6 +14,9 @@ from ..users.repository import UserRepository
 from ..configs.database import get_db
 from .utils import set_auth_cookies, send_auth_code_email
 from .repository import PasswordlessRepository
+from app.configs.settings import get_settings
+
+settings = get_settings()
 
 
 class PasswordlessService:
@@ -30,7 +32,8 @@ class PasswordlessService:
             email=email, otp=otp, token=token, expires_at=expires_at
         )
         # TODO: ADJUST URL
-        magic_link_url = f"{config('FRONTEND_URL')}/auth/verify/{token}"
+        magic_link_url = f"{settings.FRONTEND_URL}/auth/verify/{token}"
+
         await send_auth_code_email(
             email=email, magic_link_url=magic_link_url, otp_code=otp
         )

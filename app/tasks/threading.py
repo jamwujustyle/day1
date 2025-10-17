@@ -17,10 +17,6 @@ def process_log_threading(
     user_id: str,
 ):
 
-    from app.tasks import OPENAI_KEY
-
-    openai.api_key = OPENAI_KEY
-
     async def analyze_and_thread():
         async_db = AsyncSessionLocal()
         try:

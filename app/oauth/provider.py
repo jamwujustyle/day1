@@ -1,6 +1,6 @@
 import secrets
 from typing import Dict
-from decouple import config
+from app.configs.settings import get_settings
 
 from fastapi import Request
 from fastapi.routing import APIRouter
@@ -8,6 +8,7 @@ from fastapi.routing import APIRouter
 from urllib.parse import urlencode
 
 router = APIRouter()
+settings = get_settings()
 
 
 class GoogleProvider:
@@ -19,10 +20,10 @@ class GoogleProvider:
     scope = "openid email profile"
 
     def get_client_id(self) -> str:
-        return config("GOOGLE_CLIENT_ID", None)
+        return settings.GOOGLE_CLIENT_ID
 
     def get_client_secret(self) -> str:
-        return config("GOOGLE_CLIENT_SECRET")
+        return settings.GOOGLE_CLIENT_SECRET
 
     def get_redirect_url(self, request: Request) -> str:
         return request.url_for("oauth_callback", provider=self.name)

@@ -2,9 +2,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy import create_engine as create_sync_engine
 from typing import AsyncGenerator
-from decouple import config
+from app.configs.settings import get_settings
 
-DATABASE_URL = config("DATABASE_URL", None)
+settings = get_settings()
+
+DATABASE_URL = settings.DATABASE_URL
 
 sync_engine = create_sync_engine(
     DATABASE_URL.replace("+asyncpg", ""), echo=False, pool_size=5

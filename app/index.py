@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 from starlette.middleware.sessions import SessionMiddleware
-from decouple import config
 from pathlib import Path
 
 
@@ -22,10 +21,12 @@ from .auth.models import MagicLink
 from .oauth.models import SocialAccount
 
 app = FastAPI(title="logg", version="1.0.0")
-MEDIA_ROOT = Path(config("MEDIA_ROOT"))
-MEDIA_URL = config("MEDIA_URL")
 
-app.mount(MEDIA_URL, StaticFiles(directory=MEDIA_ROOT), name="media")
+from app.configs.settings import get_settings
+
+settings = get_settings()
+
+app.mount(settings.MEDIA_URL, StaticFiles(directory=settings.MEDIA_ROOT), name="media")
 
 
 app.add_middleware(
@@ -42,7 +43,7 @@ app.add_middleware(
 )
 app.add_middleware(
     SessionMiddleware,
-    secret_key=config("SESSION_SECRET"),
+    secret_key=settings.SESSION_SECRET,
 )
 
 

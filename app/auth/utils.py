@@ -1,7 +1,6 @@
 from fastapi.responses import Response
 from ..configs.jwt import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
 from ..configs.settings import get_settings
-from decouple import config
 import resend
 
 settings = get_settings()
@@ -64,7 +63,7 @@ async def send_auth_code_email(email, magic_link_url, otp_code):
             <p>Or click the link below to sign in:</p>
             <a href="{magic_link_url}">{magic_link_url}</a>
         """
-        resend.api_key = config("RESEND_API_KEY", default=None)
+        resend.api_key = settings.RESEND_API_KEY
 
         resend.Emails.send(
             {

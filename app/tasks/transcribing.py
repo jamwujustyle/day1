@@ -12,9 +12,7 @@ from ..configs.database import SyncSessionLocal, AsyncSessionLocal
 
 @shared_task
 def transcribe_to_english(video_id: str, source_language: str):
-    from . import OPENAI_KEY, TRANSLATION_PROMPT
-
-    openai.api_key = OPENAI_KEY
+    from . import TRANSLATION_PROMPT
 
     db = SyncSessionLocal()
     try:
@@ -115,9 +113,7 @@ def transcribe_to_english(video_id: str, source_language: str):
 
 @shared_task
 def transcribe_other_languages_batch(video_id: str, source_language: str):
-    from . import OPENAI_KEY, MULTI_LANGUAGE_TRANSLATION_PROMPT, LANGUAGE_MAP
-
-    openai.api_key = OPENAI_KEY
+    from . import MULTI_LANGUAGE_TRANSLATION_PROMPT, LANGUAGE_MAP
 
     db = SyncSessionLocal()
     try:

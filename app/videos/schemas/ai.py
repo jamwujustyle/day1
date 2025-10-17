@@ -9,7 +9,8 @@ class AISegment(BaseModel):
 
 
 class AITranslation(BaseModel):
-    title: str = Field(..., max_length=70)
+    # TODO: CHANGE LATER
+    title: str = Field(..., max_length=150)
     summary: str
     text: Optional[str] = None
     segments: Optional[List[AISegment]] = None

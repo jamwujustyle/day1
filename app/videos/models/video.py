@@ -46,5 +46,6 @@ class VideoLocalization(Base, UUIDMixin, TimestampMixin):
     )
     video: Mapped["Video"] = relationship("Video", back_populates="localizations")
     language: Mapped[str] = mapped_column(String(10), nullable=False)
-    title: Mapped[str] = mapped_column(String(70), nullable=True)
+    # TODO: CHANGE LATER
+    title: Mapped[str] = mapped_column(String(150), nullable=True)
     summary: Mapped[str] = mapped_column(Text, nullable=True)

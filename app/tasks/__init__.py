@@ -7,6 +7,7 @@ from .transcribing import (
     transcribe_other_languages_batch,
 )
 import openai
+import json
 from .prompts import TRANSLATION_PROMPT, MULTI_LANGUAGE_TRANSLATION_PROMPT
 
 from app.configs.settings import get_settings
@@ -27,3 +28,30 @@ LANGUAGE_MAP = {
 MEDIA_ROOT = "media/videos"
 OPENAI_KEY = settings.OPENAI_API_KEY
 openai.api_key = OPENAI_KEY
+
+
+def make_request(
+    messages: list,
+    model="gpt-4o-mini",
+    response_format={"type": "json_object"},
+    prompt_cache_key: str = None,
+    temperature: float = 0,
+    **kwargs,
+):
+    try:
+        response = openai.chat.completions.create(
+            model=model,
+            messages=messages,
+            response_format=response_format,
+            prompt_cache_key=prompt_cache_key,
+            temperature=temperature,
+        )
+        content = response.choices[0].message.content
+        print(f"AI response: {content}")
+
+        if response_format.get("type") == "json_object":
+            return json.loads(content)
+        return content
+    except Exception as ex:
+        print(f"[OpenAI Error] {str(ex)}")
+        raise

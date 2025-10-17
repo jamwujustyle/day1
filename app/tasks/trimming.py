@@ -42,7 +42,14 @@ def trim_silence(temp_path: str, video_id: str):
         final_filename = "original.mp4"
         final_path = os.path.join(video_dir, final_filename)
 
-        trimmed_video.write_videofile(final_path, codec="libx264", audio_codec="aac")
+        # Use a unique temporary file for moviepy's audio processing to avoid conflicts
+        temp_moviepy_audio = f"/tmp/moviepy_temp_{unique_id}.aac"
+        trimmed_video.write_videofile(
+            final_path,
+            codec="libx264",
+            audio_codec="aac",
+            temp_audiofile=temp_moviepy_audio,
+        )
 
         clip.close()
         trimmed_video.close()

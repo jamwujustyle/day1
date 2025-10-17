@@ -1,7 +1,6 @@
 from celery import shared_task
 import asyncio
 import json
-import openai
 
 from app.videos.services import SubtitleService, VideoService
 from app.videos.services.subtitle import get_subtitle_sync_service
@@ -39,23 +38,18 @@ def transcribe_to_english(video_id: str, source_language: str):
             english_instructions=english_instructions,
         )
 
-        response = openai.chat.completions.create(
-            # FIXME: TOGGLE MODELS
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant that provides translations and adjusts timestamps in JSON format.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-            prompt_cache_key="english_translation",
-        )
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that provides translations and adjusts timestamps in JSON format.",
+            },
+            {"role": "user", "content": prompt},
+        ]
+        from . import make_request
 
-        response_data = AITranslation.model_validate_json(
-            response.choices[0].message.content
-        )
+        result = make_request(messages=messages, prompt_cache_key="english_translation")
+
+        response_data = AITranslation.model_validate(result)
 
         async def save_data():
             async_db = AsyncSessionLocal()
@@ -141,23 +135,18 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
             segments=json.dumps(source_subtitle.segments),
         )
 
-        response = openai.chat.completions.create(
-            # FIXME: TOGGLE MODELS
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant that provides translations for multiple languages in a single JSON object.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-            prompt_cache_key="batch_translation",
-        )
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that provides translations for multiple languages in a single JSON object.",
+            },
+            {"role": "user", "content": prompt},
+        ]
+        from . import make_request
 
-        response_data = AIMultiLanguageTranslation.model_validate_json(
-            response.choices[0].message.content
-        )
+        result = make_request(messages=messages, prompt_cache_key="batch_translation")
+
+        response_data = AIMultiLanguageTranslation.model_validate(result)
 
         async def save_data():
             async_db = AsyncSessionLocal()

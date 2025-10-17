@@ -3,7 +3,6 @@ from celery import shared_task
 from uuid import UUID
 import asyncio
 import json
-import openai
 
 from app.configs.database import AsyncSessionLocal
 from app.logs.services import LogService, ThreadService
@@ -113,20 +112,18 @@ Since there are no existing threads, decide if this video content is substantial
 - false: Casual/trivial content, test videos, low-value content.
 """
 
-            response = openai.chat.completions.create(
-                # FIXME: TOGGLE MODELS
-                model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert at content organization. Be thoughtful - quality over quantity.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                response_format={"type": "json_object"},
-            )
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are an expert at content organization. Be thoughtful - quality over quantity.",
+                },
+                {"role": "user", "content": prompt},
+            ]
 
-            result = json.loads(response.choices[0].message.content)
+            from . import make_request
+
+            result = make_request(messages=messages)
+
             print(
                 f"AI Threading Decision for log {log_id}: {json.dumps(result, indent=2)}"
             )

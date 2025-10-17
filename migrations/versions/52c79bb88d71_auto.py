@@ -1,8 +1,8 @@
 """auto
 
-Revision ID: e140731d4b5c
+Revision ID: 52c79bb88d71
 Revises: 
-Create Date: 2025-10-16 08:06:01.273186
+Create Date: 2025-10-17 09:51:26.830362
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'e140731d4b5c'
+revision: str = '52c79bb88d71'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -54,7 +54,7 @@ def upgrade() -> None:
     sa.UniqueConstraint('email')
     )
     op.create_table('threads',
-    sa.Column('name', sa.String(length=60), nullable=False),
+    sa.Column('name', sa.String(length=150), nullable=False),
     sa.Column('summary', sa.Text(), nullable=False),
     sa.Column('keywords', sa.ARRAY(sa.VARCHAR(length=40)), nullable=True),
     sa.Column('user_id', sa.UUID(), nullable=False),
@@ -111,7 +111,7 @@ def upgrade() -> None:
     op.create_table('video_localizations',
     sa.Column('video_id', sa.UUID(), nullable=False),
     sa.Column('language', sa.String(length=10), nullable=False),
-    sa.Column('title', sa.String(length=70), nullable=True),
+    sa.Column('title', sa.String(length=150), nullable=True),
     sa.Column('summary', sa.Text(), nullable=True),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),

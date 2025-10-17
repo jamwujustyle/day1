@@ -18,4 +18,6 @@ def update_users_context():
             if not active_user_ids:
                 return
 
-            context_to_update = context_service(active_user_ids)
+            context_to_update = await context_service.create_or_update_context(
+                active_user_ids
+            )

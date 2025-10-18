@@ -44,3 +44,135 @@ Please provide the output in a single JSON object with a single key "translation
 - "text": "Full translated text" (only for target languages)
 - "segments": [{{ "word": "translated_word", "start": start_time, "end": end_time }}] (only for target languages)
 """
+
+# In your prompts file (e.g., prompts.py)
+
+
+USER_CONTEXT_PROMPT = """
+You are a context analysis engine that builds and maintains a comprehensive understanding of users based on their conversation threads.
+
+## Your Task
+You will receive:
+1. **Existing User Context** (may be empty if this is the first analysis)
+2. **Thread Metadata** from the user's conversations
+
+Your job is to:
+- If there's existing context: READ IT CAREFULLY and UPDATE it with new insights from the threads
+- If there's no existing context: CREATE a new comprehensive context from scratch
+- SYNTHESIZE information - don't just append, but integrate new patterns with existing knowledge
+- PRESERVE important existing insights while adding new ones
+- REFINE and consolidate - if new threads contradict or expand on existing context, update accordingly
+
+## Output Format
+You MUST respond with a JSON object containing a single field "context":
+
+{{
+    "context": "A comprehensive, information-dense summary of the user. Should be 3-6 sentences that capture their interests, expertise, behavior patterns, goals, and communication preferences. Each sentence should add distinct value."
+}}
+
+## Guidelines
+- INTEGRATE new information with existing context, don't just append
+- PRIORITIZE patterns that appear across multiple threads
+- BE SPECIFIC - use concrete terminology and examples
+- TRACK EVOLUTION - if user's interests/skills are progressing, reflect that
+- CONSOLIDATE - merge related insights to keep context concise
+- Maximum 200 words
+
+## Example Scenarios
+
+**Scenario 1 - First Analysis (No Existing Context):**
+Threads show: Python web development, FastAPI, async patterns
+Output: "User is a backend developer working with Python, specifically FastAPI and async patterns. Shows interest in building scalable APIs."
+
+**Scenario 2 - Update (Has Existing Context):**
+Existing: "User is a backend developer working with Python, specifically FastAPI and async patterns."
+New Threads: Web3 integration, blockchain wallets, smart contracts
+Output: "User is a backend developer with expertise in Python/FastAPI, now expanding into Web3 development. Recent focus on blockchain wallet integration and smart contract interaction. Demonstrates progression from traditional backend to decentralized applications."
+
+---
+
+## Current Analysis
+
+**Existing User Context:**
+{existing_context}
+
+**Thread Metadata:**
+{threads_metadata}
+
+Generate the updated context that integrates both the existing understanding and new insights from the threads.
+"""
+
+THREADING_WITH_EXISTING_THREADS_PROMPT = """
+You are an intelligent content analyzer.
+
+    **Existing Threads:**
+    {threads_text}
+
+    **New Video Compressed Context:**
+    {compressed_context}
+
+    **Your task:**
+    1.  Analyze the new video context and compare it with the existing threads.
+    2.  **If it matches an existing thread**:
+        a.  Indicate which thread it matches (use the 1-based index).
+        b.  Decide if the new context adds significant information to the matched thread.
+        c.  If it does, provide an **updated** summary and keywords for that thread. The new summary should integrate the new information, not just append it.
+    3.  **If it does NOT match any existing thread**:
+        a.  Decide if the content is substantial enough to create a **new** thread.
+        b.  If yes, generate the thread metadata (name, summary, keywords) for the new thread.
+
+    **Response Format (JSON):**
+    {{
+        "match_found": true/false,
+        "matched_thread_index": <number 1-based> (null if no match),
+        "update_required": true/false (only relevant if a match is found),
+        "updated_metadata": {{
+            "summary": "Updated summary text",
+            "keywords": ["new", "keyword", "list"]
+        }} (null if no update is required),
+        "should_create_new_thread": true/false (only relevant if no match is found),
+        "new_thread_metadata": {{
+            "name": "New thread name (max 60 chars)",
+            "summary": "Brief summary (max 200 chars)",
+            "keywords": ["keyword1", "keyword2"]
+        }} (null if a new thread should not be created),
+        "reasoning": "Brief explanation of your decision process."
+    }}
+
+    **Guidelines for "update_required":**
+    - true: The new log adds valuable details, context, or corrects/expands on the existing summary.
+    - false: The new log is redundant, trivial, or doesn't add significant value to the thread's summary.
+
+    **Guidelines for "should_create_new_thread":**
+    - true: Content is informative, reusable knowledge, part of a larger topic.
+    - false: Casual/trivial content, test videos, low-value content.
+    """
+
+THREADING_NO_THREADS_PROMPT = """
+You are an intelligent content analyzer.
+
+    **Video Compressed Context:**
+    {compressed_context}
+
+    **Your task:**
+    Since there are no existing threads, decide if this video content is substantial/meaningful enough to warrant creating the FIRST thread. If yes, generate the thread metadata.
+
+    **Response Format (JSON):**
+    {{
+        "match_found": false,
+        "matched_thread_index": null,
+        "update_required": false,
+        "updated_metadata": null,
+        "should_create_new_thread": true/false,
+        "new_thread_metadata": {{
+            "name": "New thread name (max 60 chars)",
+            "summary": "Brief summary (max 200 chars)",
+            "keywords": ["keyword1", "keyword2"]
+        }} (null if a new thread should not be created),
+        "reasoning": "Brief explanation of your decision process."
+    }}
+
+    **Guidelines for "should_create_new_thread":**
+    - true: Content is informative, reusable knowledge, part of a larger topic.
+    - false: Casual/trivial content, test videos, low-value content.
+    """

@@ -1,8 +1,8 @@
 """auto
 
-Revision ID: 52c79bb88d71
+Revision ID: f5662a7a29a2
 Revises: 
-Create Date: 2025-10-17 09:51:26.830362
+Create Date: 2025-10-18 08:53:41.028146
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '52c79bb88d71'
+revision: str = 'f5662a7a29a2'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -66,7 +66,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_threads_summary'), 'threads', ['summary'], unique=False)
     op.create_table('user_contexts',
-    sa.Column('compressed_logs', sa.Text(), nullable=False),
+    sa.Column('context', sa.Text(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),

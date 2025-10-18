@@ -8,7 +8,11 @@ from .transcribing import (
 )
 import openai
 import json
-from .prompts import TRANSLATION_PROMPT, MULTI_LANGUAGE_TRANSLATION_PROMPT
+from .prompts import (
+    TRANSLATION_PROMPT,
+    MULTI_LANGUAGE_TRANSLATION_PROMPT,
+    USER_CONTEXT_PROMPT,
+)
 
 from app.configs.settings import get_settings
 

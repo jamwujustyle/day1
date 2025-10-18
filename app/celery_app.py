@@ -14,11 +14,5 @@ celery_app = Celery(
     include=["app.tasks"],
 )
 
-# celery_app.conf.beat_schedule = {
-#     "update-users-context": {
-#         "task": "app.tasks.update_users_context",
-#         "schedule": crontab(hour=0, minute=0),
-#     }
-# }
 
 celery_app.autodiscover_tasks(["app.tasks"])

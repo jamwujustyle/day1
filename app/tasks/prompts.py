@@ -45,10 +45,9 @@ Please provide the output in a single JSON object with a single key "translation
 - "segments": [{{ "word": "translated_word", "start": start_time, "end": end_time }}] (only for target languages)
 """
 
-# In your prompts file (e.g., prompts.py)
 
-
-USER_CONTEXT_PROMPT = """
+# CHANGE MAX WORDS LIMIT
+USER_BIO_PROMPT = """
 You are a user-profile generator that creates natural, public-facing bios based on conversation history.
 
 ## Your Task
@@ -80,7 +79,7 @@ You MUST respond with a JSON object containing a single field "bio":
 
 ## Example Scenarios
 
-**Scenario 1 - First Bio (No Existing Context):**
+**Scenario 1 - First Bio (No Existing Bio):**
 Threads show: Python web development, FastAPI, async patterns
 Output: "Backend developer passionate about Python and FastAPI. Enjoys working on scalable APIs and exploring async programming techniques."
 
@@ -94,7 +93,7 @@ Output: "Backend developer with a focus on Python and FastAPI, now diving into W
 ## Current Analysis
 
 **Existing Bio:**
-{existing_context}
+{existing_bio}
 
 **Thread Metadata:**
 {threads_metadata}

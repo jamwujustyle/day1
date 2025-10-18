@@ -9,7 +9,7 @@ from ..core.mixins import UUIDMixin
 
 if TYPE_CHECKING:
     from app.videos.models import Video
-    from app.logs.models import Log, Thread, UserContext
+    from app.logs.models import Log, Thread, UserBio
 
 
 class User(Base, UUIDMixin):
@@ -46,6 +46,6 @@ class User(Base, UUIDMixin):
     threads: Mapped[list["Thread"]] = relationship(
         "Thread", back_populates="user", cascade="all, delete-orphan"
     )
-    user_contexts: Mapped[list["UserContext"]] = relationship(
-        "UserContext", back_populates="user", cascade="all, delete-orphan"
+    user_bios: Mapped[list["UserBio"]] = relationship(
+        "UserBio", back_populates="user", cascade="all, delete-orphan"
     )

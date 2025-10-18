@@ -169,6 +169,6 @@ def process_log_threading(
             logger.warning(f"Failed to release lock for user {user_id}: {ex}")
 
     # Trigger user context update
-    from .context import update_user_context
+    from .user_bio import update_user_bio
 
-    update_user_context.delay(user_id=user_id)
+    update_user_bio.delay(user_id=user_id)

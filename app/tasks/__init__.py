@@ -6,13 +6,13 @@ from .transcribing import (
     transcribe_other_languages_batch,
 )
 from .threading import process_log_threading
-from .context import update_user_context
+from .user_bio import update_user_bio
 
 import openai, json
 from .prompts import (
     TRANSLATION_PROMPT,
     MULTI_LANGUAGE_TRANSLATION_PROMPT,
-    USER_CONTEXT_PROMPT,
+    USER_BIO_PROMPT,
 )
 
 from app.configs.settings import get_settings

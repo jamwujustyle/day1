@@ -4,7 +4,7 @@ from celery.schedules import crontab
 from app.users.models import User
 from app.videos.models import Video, Subtitle
 from app.oauth.models import SocialAccount
-from app.logs.models import Log, Thread, UserContext
+from app.logs.models import Log, Thread, UserBio
 
 
 celery_app = Celery(

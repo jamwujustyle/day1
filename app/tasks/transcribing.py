@@ -51,58 +51,54 @@ def transcribe_to_english(video_id: str, source_language: str):
 
         response_data = AITranslation.model_validate(result)
 
-        async def save_data():
-            async_db = AsyncSessionLocal()
-            try:
-                subtitle_service = SubtitleService(async_db)
-                video_service = VideoService(async_db)
-
-                await subtitle_service.create_subtitle_from_transcription(
-                    video_id=video_id,
-                    language="english",
-                    transcription_data=response_data,
-                )
-                await video_service.create_localization(
-                    video_id=video_id,
-                    language="english",
-                    title=response_data.title,
-                    summary=response_data.summary,
-                )
-                if response_data.compressed_context:
-                    from app.videos.models import Video
-                    from app.logs.services import LogService
-                    from . import process_log_threading
-
-                    video: Video = await async_db.get(Video, video_id)
-                    if video:
-                        log_service = LogService(async_db)
-                        log = await log_service.create_log(
-                            compressed_context=response_data.compressed_context,
-                            user_id=video.user_id,
-                            video_id=video_id,
-                        )
-                        process_log_threading.delay(
-                            log_id=str(log.id),
-                            compressed_context=response_data.compressed_context,
-                            user_id=str(video.user_id),
-                        )
-            finally:
-                await async_db.close()
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(save_data())
-
-        # Trigger the next task for other languages
-        transcribe_other_languages_batch.delay(
-            video_id=video_id, source_language=source_language
-        )
-
     except Exception as ex:
         db.rollback()
         print(f"Error translating to English: {ex}")
         raise ex
     finally:
         db.close()
+
+    async def save_data():
+        async with AsyncSessionLocal() as async_db:
+            subtitle_service = SubtitleService(async_db)
+            video_service = VideoService(async_db)
+
+            await subtitle_service.create_subtitle_from_transcription(
+                video_id=video_id,
+                language="english",
+                transcription_data=response_data,
+            )
+            await video_service.create_localization(
+                video_id=video_id,
+                language="english",
+                title=response_data.title,
+                summary=response_data.summary,
+            )
+            if response_data.compressed_context:
+                from app.videos.models import Video
+                from app.logs.services import LogService
+                from . import process_log_threading
+
+                video: Video = await async_db.get(Video, video_id)
+                if video:
+                    log_service = LogService(async_db)
+                    log = await log_service.create_log(
+                        compressed_context=response_data.compressed_context,
+                        user_id=video.user_id,
+                        video_id=video_id,
+                    )
+                    process_log_threading.delay(
+                        log_id=str(log.id),
+                        compressed_context=response_data.compressed_context,
+                        user_id=str(video.user_id),
+                    )
+
+    asyncio.run(save_data())
+
+    # Trigger the next task for other languages
+    transcribe_other_languages_batch.delay(
+        video_id=video_id, source_language=source_language
+    )
 
 
 @shared_task
@@ -147,10 +143,15 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
         result = make_request(messages=messages, prompt_cache_key="batch_translation")
 
         response_data = AIMultiLanguageTranslation.model_validate(result)
+    except Exception as ex:
+        db.rollback()
+        print(f"Error translating to other languages: {ex}")
+        raise ex
+    finally:
+        db.close()
 
         async def save_data():
-            async_db = AsyncSessionLocal()
-            try:
+            async with AsyncSessionLocal() as async_db:
                 subtitle_service = SubtitleService(async_db)
                 video_service = VideoService(async_db)
                 for lang, data in response_data.translations.items():
@@ -166,18 +167,8 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
                         title=data.title,
                         summary=data.summary,
                     )
-            finally:
-                await async_db.close()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(save_data())
-
-    except Exception as ex:
-        db.rollback()
-        print(f"Error translating to other languages: {ex}")
-        raise ex
-    finally:
-        db.close()
+    asyncio.run(save_data())
 
 
 @shared_task

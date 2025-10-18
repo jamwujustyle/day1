@@ -4,8 +4,8 @@ from celery import shared_task
 
 import os
 import uuid
-
 import asyncio
+
 from ..configs.database import AsyncSessionLocal
 from ..videos.services import VideoService
 
@@ -55,29 +55,26 @@ def trim_silence(temp_path: str, video_id: str):
         trimmed_video.close()
         os.remove(temp_path)
 
-        async def update_video_url():
-            async with AsyncSessionLocal() as async_db:
-                video_service = VideoService(async_db)
-                await video_service.update_video_url(
-                    video_id=video_id, file_url=final_path
-                )
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(update_video_url())
-
-        # Language detection and dubbing
-        trimmed_audio_path = f"/tmp/trimmed_audio_for_dubbing_{unique_id}.wav"
-        trimmed_video_for_audio = VideoFileClip(final_path)
-        trimmed_video_for_audio.audio.write_audiofile(trimmed_audio_path)
-        trimmed_video_for_audio.close()
-
-        from .speech_to_text import transcribe_source_audio
-
-        transcribe_source_audio.delay(video_id=video_id, audio_path=trimmed_audio_path)
-
         # Clean up temporary audio files
         if os.path.exists(temp_audio_path):
             os.remove(temp_audio_path)
 
     except Exception as ex:
         raise ex
+
+    async def update_video_url():
+        async with AsyncSessionLocal() as async_db:
+            video_service = VideoService(async_db)
+            await video_service.update_video_url(video_id=video_id, file_url=final_path)
+
+    asyncio.run(update_video_url())
+
+    # Language detection and dubbing
+    trimmed_audio_path = f"/tmp/trimmed_audio_for_dubbing_{unique_id}.wav"
+    trimmed_video_for_audio = VideoFileClip(final_path)
+    trimmed_video_for_audio.audio.write_audiofile(trimmed_audio_path)
+    trimmed_video_for_audio.close()
+
+    from .speech_to_text import transcribe_source_audio
+
+    transcribe_source_audio.delay(video_id=video_id, audio_path=trimmed_audio_path)

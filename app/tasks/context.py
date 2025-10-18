@@ -9,7 +9,7 @@ from uuid import UUID
 import json
 import asyncio
 
-from logging_config import logger
+from app.configs.logging_config import logger
 
 
 @shared_task

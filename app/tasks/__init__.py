@@ -1,13 +1,14 @@
 from .trimming import trim_silence
-from .threading import process_log_threading
 from .speech_to_text import transcribe_source_audio
 from .transcribing import (
     generate_subtitles_for_video,
     transcribe_to_english,
     transcribe_other_languages_batch,
 )
-import openai
-import json
+from .threading import process_log_threading
+from .context import update_user_context
+
+import openai, json
 from .prompts import (
     TRANSLATION_PROMPT,
     MULTI_LANGUAGE_TRANSLATION_PROMPT,

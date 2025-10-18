@@ -7,7 +7,7 @@ from app.configs.database import AsyncSessionLocal
 from app.logs.services import LogService, ThreadService
 from app.logs.schemas import OpenAIThreadResponse
 from .lock import get_user_lock
-from logging_config import logger
+from app.configs.logging_config import logger
 
 
 @shared_task
@@ -23,14 +23,12 @@ def process_log_threading(
 
         if not acquired:
             logger.critical(f"Failed to acquire lock for user {user_id}")
-            # If lock wasn't acquired, raise exception to retry the task
             raise Exception(f"Could not acquire lock for user {user_id}")
 
         logger.info(f"🔒 Acquired lock for user {user_id} - processing log {log_id}")
 
         async def analyze_and_thread():
-            async_db = AsyncSessionLocal()
-            try:
+            async with AsyncSessionLocal() as async_db:
                 thread_service = ThreadService(async_db)
                 log_service = LogService(async_db)
 
@@ -158,22 +156,19 @@ def process_log_threading(
                 else:
                     logger.info(f"✗ Log {log_id} is not worth threading.")
                     logger.info(f"  Reasoning: {reasoning}")
-            except Exception as ex:
-                logger.error(f"Error processing thread for log {log_id}: {ex}")
-                raise ex
-            finally:
-                await async_db.close()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(analyze_and_thread())
+        # RUN THE ASYNC FUNCTION - ONLY ONE asyncio.run() CALL
+        asyncio.run(analyze_and_thread())
 
     finally:
+        # Release lock after async function completes
         try:
             lock.release()
             logger.info(f"🔓 Released lock for user {user_id}")
         except Exception as ex:
             logger.warning(f"Failed to release lock for user {user_id}: {ex}")
 
+    # Trigger user context update
     from .context import update_user_context
 
     update_user_context.delay(user_id=user_id)

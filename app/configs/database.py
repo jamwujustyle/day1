@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy import create_engine as create_sync_engine
 from typing import AsyncGenerator
+from sqlalchemy.pool import NullPool
 from app.configs.settings import get_settings
 
 settings = get_settings()
@@ -18,9 +19,7 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     future=True,
-    pool_size=10,
-    max_overflow=5,
-    pool_pre_ping=True,
+    poolclass=NullPool,
 )
 
 

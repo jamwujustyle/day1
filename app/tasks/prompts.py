@@ -49,58 +49,59 @@ Please provide the output in a single JSON object with a single key "translation
 
 
 USER_CONTEXT_PROMPT = """
-You are a context analysis engine that builds and maintains a comprehensive understanding of users based on their conversation threads.
+You are a user-profile generator that creates natural, public-facing bios based on conversation history.
 
 ## Your Task
 You will receive:
-1. **Existing User Context** (may be empty if this is the first analysis)
+1. **Existing User Bio** (may be empty if this is the first analysis)
 2. **Thread Metadata** from the user's conversations
 
 Your job is to:
-- If there's existing context: READ IT CAREFULLY and UPDATE it with new insights from the threads
-- If there's no existing context: CREATE a new comprehensive context from scratch
-- SYNTHESIZE information - don't just append, but integrate new patterns with existing knowledge
-- PRESERVE important existing insights while adding new ones
-- REFINE and consolidate - if new threads contradict or expand on existing context, update accordingly
+- If there's an existing bio: READ IT CAREFULLY and UPDATE it with new insights from the threads
+- If there's no bio: CREATE a new one from scratch
+- Synthesize and integrate information naturally — don’t just append facts
+- Preserve meaningful existing traits and merge new ones smoothly
+- Keep the tone human, relatable, and concise
 
 ## Output Format
-You MUST respond with a JSON object containing a single field "context":
+You MUST respond with a JSON object containing a single field "bio":
 
 {{
-    "context": "A comprehensive, information-dense summary of the user. Should be 3-6 sentences that capture their interests, expertise, behavior patterns, goals, and communication preferences. Each sentence should add distinct value."
+    "bio": "A natural, public-facing user bio (2–4 sentences). It should sound authentic and personable, not analytical or corporate. Use casual but clear language suitable for a profile page."
 }}
 
-## Guidelines
-- INTEGRATE new information with existing context, don't just append
-- PRIORITIZE patterns that appear across multiple threads
-- BE SPECIFIC - use concrete terminology and examples
-- TRACK EVOLUTION - if user's interests/skills are progressing, reflect that
-- CONSOLIDATE - merge related insights to keep context concise
-- Maximum 200 words
+## Style Guidelines
+- Write in third person or neutral tone (avoid “the user”, use “Tech enthusiast”, “Backend developer”, etc.)
+- Be short, clear, and human — around 40–70 words max
+- Avoid corporate or analytical phrasing like “This suggests” or “indicates a preference for”
+- Highlight interests, skills, and personality naturally
+- Combine technical and personal sides if present (e.g. “Enjoys building web apps and experimenting with AI tools”)
+- Never include private or sensitive information
 
 ## Example Scenarios
 
-**Scenario 1 - First Analysis (No Existing Context):**
+**Scenario 1 - First Bio (No Existing Context):**
 Threads show: Python web development, FastAPI, async patterns
-Output: "User is a backend developer working with Python, specifically FastAPI and async patterns. Shows interest in building scalable APIs."
+Output: "Backend developer passionate about Python and FastAPI. Enjoys working on scalable APIs and exploring async programming techniques."
 
-**Scenario 2 - Update (Has Existing Context):**
-Existing: "User is a backend developer working with Python, specifically FastAPI and async patterns."
+**Scenario 2 - Update (Has Existing Bio):**
+Existing: "Backend developer passionate about Python and FastAPI."
 New Threads: Web3 integration, blockchain wallets, smart contracts
-Output: "User is a backend developer with expertise in Python/FastAPI, now expanding into Web3 development. Recent focus on blockchain wallet integration and smart contract interaction. Demonstrates progression from traditional backend to decentralized applications."
+Output: "Backend developer with a focus on Python and FastAPI, now diving into Web3. Currently experimenting with blockchain wallets and smart contracts."
 
 ---
 
 ## Current Analysis
 
-**Existing User Context:**
+**Existing Bio:**
 {existing_context}
 
 **Thread Metadata:**
 {threads_metadata}
 
-Generate the updated context that integrates both the existing understanding and new insights from the threads.
+Generate the updated bio that integrates both the existing understanding and new insights from the threads.
 """
+
 
 THREADING_WITH_EXISTING_THREADS_PROMPT = """
 You are an intelligent content analyzer.

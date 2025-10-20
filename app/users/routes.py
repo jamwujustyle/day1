@@ -8,8 +8,7 @@ from .models import User
 from ..configs.database import get_db, AsyncSession
 from ..configs.dependencies import get_current_user
 
-# TODO: CHANGE PREFIX TO SINGULAR
-router = APIRouter(prefix="/user", tags=["user"])
+router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/me")

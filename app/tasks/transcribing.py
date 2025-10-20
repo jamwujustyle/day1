@@ -7,6 +7,7 @@ from app.videos.services.subtitle import get_subtitle_sync_service
 from app.videos.schemas.ai import AITranslation, AIMultiLanguageTranslation
 
 from ..configs.database import SyncSessionLocal, AsyncSessionLocal
+from app.configs.logging_config import logger
 
 
 @shared_task
@@ -17,7 +18,7 @@ def transcribe_to_english(video_id: str, source_language: str):
     try:
         source_subtitle = get_subtitle_sync_service(db, video_id, source_language)
         if not source_subtitle:
-            print(
+            logger.error(
                 f"Source subtitle in {source_language} not found for video {video_id}"
             )
             return
@@ -53,7 +54,7 @@ def transcribe_to_english(video_id: str, source_language: str):
 
     except Exception as ex:
         db.rollback()
-        print(f"Error translating to English: {ex}")
+        logger.error(f"Error translating to English: {ex}")
         raise ex
     finally:
         db.close()
@@ -109,7 +110,7 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
     try:
         source_subtitle = get_subtitle_sync_service(db, video_id, source_language)
         if not source_subtitle:
-            print(
+            logger.info(
                 f"Source subtitle in {source_language} not found for video {video_id}"
             )
             return
@@ -120,7 +121,7 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
         target_languages = [lang for lang in LANGUAGE_MAP.keys() if lang != "english"]
 
         if not target_languages:
-            print("No other languages to translate.")
+            logger.debug("No other languages to translate.")
             return
 
         prompt = MULTI_LANGUAGE_TRANSLATION_PROMPT.format(
@@ -145,7 +146,7 @@ def transcribe_other_languages_batch(video_id: str, source_language: str):
         response_data = AIMultiLanguageTranslation.model_validate(result)
     except Exception as ex:
         db.rollback()
-        print(f"Error translating to other languages: {ex}")
+        logger.error(f"Error translating to other languages: {ex}")
         raise ex
     finally:
         db.close()

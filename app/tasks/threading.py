@@ -8,6 +8,7 @@ from app.logs.services import LogService, ThreadService
 from app.logs.schemas import OpenAIThreadResponse
 from .lock import get_user_lock
 from app.configs.logging_config import logger
+from app.configs.logging_config import logger
 
 
 @shared_task

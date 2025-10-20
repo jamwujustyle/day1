@@ -5,6 +5,7 @@ from app.configs.database import AsyncSessionLocal
 from app.videos.services import SubtitleService, VideoService
 from app.videos.schemas.ai import AITranslation, AISegment
 from .transcribing import generate_subtitles_for_video
+from app.configs.logging_config import logger
 
 
 @shared_task
@@ -20,7 +21,7 @@ def transcribe_source_audio(video_id: str, audio_path: str):
             timestamp_granularities=["word"],
         )
         source_lang = transcription.language
-        print(f"Detected language: {source_lang}")
+        logger.info(f"Detected language: {source_lang}")
 
         # Save the source subtitle
 

@@ -15,6 +15,7 @@ from .prompts import (
     USER_BIO_PROMPT,
 )
 
+from app.configs.logging_config import logger
 from app.configs.settings import get_settings
 
 settings = get_settings()
@@ -52,11 +53,11 @@ def make_request(
             temperature=temperature,
         )
         content = response.choices[0].message.content
-        print(f"AI response: {content}")
+        logger.debug(f"AI response: {content}")
 
         if response_format.get("type") == "json_object":
             return json.loads(content)
         return content
     except Exception as ex:
-        print(f"[OpenAI Error] {str(ex)}")
+        logger.critical(f"[OpenAI Error] {str(ex)}")
         raise

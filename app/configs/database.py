@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy import create_engine as create_sync_engine
 from typing import AsyncGenerator
 from sqlalchemy.pool import NullPool
-from app.configs.settings import get_settings
+from .settings import get_settings
 
 settings = get_settings()
 

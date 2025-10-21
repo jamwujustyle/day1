@@ -57,17 +57,8 @@ class LogRepository:
         )
         return logs.scalars().all()
 
-    async def fetch_log_by_id(self, log_id: int):
+    async def fetch_log_by_id(self, username: str, log_id: int):
         log = await self.db.execute(
-            select(Log)
-            .where(Log.id == log_id)
-            .options(
-                selectinload(Log.video).load_only(Video.file_url),
-                selectinload(Log.video)
-                .selectinload(Video.localizations)
-                .load_only(VideoLocalization.title, VideoLocalization.summary),
-                selectinload(Log.thread).load_only(Thread.name),
-            )
+            select(Log).join(Log.user).where(User.username == username).options
         )
-
         return log.scalar_one_or_none()

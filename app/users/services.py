@@ -20,16 +20,6 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.user_repo = UserRepository(db)
         self.bio_repo = UserBioRepository(db)
-        self.log_repo = LogRepository(db)
-
-    async def get_optional_user(
-        self,
-        request: Request,
-    ) -> User | None:
-        try:
-            return await get_current_user(request, self.user_repo.db)
-        except HTTPException:
-            return None
 
     async def update_avatar(self, user: User, file: UploadFile) -> User:
         AVATAR_MEDIA_ROOT = "media/images/avatars"
@@ -53,8 +43,13 @@ class UserService:
 
         return {**user.__dict__, "bio": bio}
 
+
+class UserLogsService:
+    def __init__(self, db: AsyncSession):
+        self.repo = LogRepository(db)
+
     async def fetch_user_logs(self, username: str):
-        logs = await self.log_repo.fetch_all_user_logs(username)
+        logs = await self.repo.fetch_all_user_logs(username)
 
         response_logs = []
         for log in logs:
@@ -75,3 +70,6 @@ class UserService:
             )
 
         return response_logs
+
+    async def fetch_log_by_id(self, username: str, log_id: int):
+        log = await self.repo.fetch_log_by_id(username=username, log_id=log_id)

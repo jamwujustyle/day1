@@ -45,12 +45,6 @@ async def get_my_videos(
     return await service.get_user_videos(current_user.id)
 
 
-@router.get("/user/{user_id}/logs", response_model=list[VideoGetResponse])
-async def get_user_videos(user_id: UUID, db: AsyncSession = Depends(get_db)):
-    service = VideoService(db)
-    return await service.get_user_videos(user_id)
-
-
 @router.get("/subtitles/{subtitle_id}", response_class=PlainTextResponse)
 async def get_subtitle_vtt(subtitle_id: UUID, db: AsyncSession = Depends(get_db)):
     service = SubtitleService(db)

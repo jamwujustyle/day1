@@ -9,14 +9,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..users.repository import UserRepository
 from ..users.models import User
-from ..logs.services import UserBioService
+from ..logs.repositories import UserBioRepository, LogRepository
 from ..configs.dependencies import get_current_user
+from .schemas import (
+    UserLogsSimpleResponse,
+)
 
 
 class UserService:
     def __init__(self, db: AsyncSession):
         self.user_repo = UserRepository(db)
-        self.bio_repo = UserBioService(db)
+        self.bio_repo = UserBioRepository(db)
+        self.log_repo = LogRepository(db)
 
     async def get_optional_user(
         self,
@@ -49,5 +53,25 @@ class UserService:
 
         return {**user.__dict__, "bio": bio}
 
-    async def fetch_active_users(self) -> List[uuid.UUID]:
-        return await self.user_repo.fetch_active_users()
+    async def fetch_user_logs(self, username: str):
+        logs = await self.log_repo.fetch_all_user_logs(username)
+
+        response_logs = []
+        for log in logs:
+            # Safely build video response, avoid lazy loads by using eager-loaded relationships
+            title = ""
+            summary = None
+            if getattr(log, "video", None) and log.video.localizations:
+                first_loc = log.video.localizations[0]
+                title = (first_loc.title or "") if hasattr(first_loc, "title") else ""
+                summary = getattr(first_loc, "summary", None)
+
+            thread_name = log.thread.name if getattr(log, "thread", None) else None
+            title
+            response_logs.append(
+                UserLogsSimpleResponse(
+                    log_id=log.id, title=title, summary=summary, thread_name=thread_name
+                )
+            )
+
+        return response_logs

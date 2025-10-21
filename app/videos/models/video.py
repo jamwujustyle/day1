@@ -20,7 +20,7 @@ class Video(Base, UUIDMixin, TimestampMixin):
     source_language: Mapped[str] = mapped_column(String, nullable=True)
 
     user_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+        PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
     file_url: Mapped[str] = mapped_column(nullable=False)
 
@@ -34,7 +34,7 @@ class Video(Base, UUIDMixin, TimestampMixin):
         "VideoLocalization", back_populates="video", cascade="all, delete-orphan"
     )
     log: Mapped[List["Log"]] = relationship(
-        "Log", back_populates="video", cascade="all, delete-orphan"
+        "Log", back_populates="video", cascade="all, delete-orphan", uselist=False
     )
 
 
@@ -42,7 +42,7 @@ class VideoLocalization(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "video_localizations"
 
     video_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("videos.id", ondelete="CASCADE")
+        PG_UUID(as_uuid=True), ForeignKey("videos.id", ondelete="CASCADE"), index=True
     )
     video: Mapped["Video"] = relationship("Video", back_populates="localizations")
     language: Mapped[str] = mapped_column(String(10), nullable=False)

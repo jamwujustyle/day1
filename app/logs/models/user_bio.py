@@ -15,6 +15,6 @@ class UserBio(Base, UUIDMixin, TimestampMixin):
 
     bio: Mapped[str] = mapped_column(Text)
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     user: Mapped["User"] = relationship(back_populates="user_bios")

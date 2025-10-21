@@ -12,7 +12,7 @@ class SocialAccount(Base, UUIDMixin):
     __tablename__ = "social_accounts"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
 

@@ -3,7 +3,7 @@ from sqlalchemy import ForeignKey, Text
 from uuid import UUID
 from typing import Optional, TYPE_CHECKING
 
-from app.core.mixins import TimestampMixin, UUIDMixin
+from app.core.mixins import TimestampMixin
 from app.configs.database import Base
 
 if TYPE_CHECKING:
@@ -12,20 +12,25 @@ if TYPE_CHECKING:
     from . import Thread
 
 
-class Log(Base, UUIDMixin, TimestampMixin):
+class Log(Base, TimestampMixin):
     __tablename__ = "logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
     compressed_context: Mapped[str] = mapped_column(Text, nullable=False)
 
     # relations
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     video_id: Mapped[UUID] = mapped_column(
-        ForeignKey("videos.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("videos.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
     )
     thread_id: Mapped[UUID] = mapped_column(
-        ForeignKey("threads.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("threads.id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     user: Mapped["User"] = relationship(back_populates="logs")

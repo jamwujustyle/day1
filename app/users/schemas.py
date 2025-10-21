@@ -3,7 +3,7 @@ from datetime import datetime
 from uuid import UUID
 
 
-from typing import Optional
+from typing import Optional, List
 
 
 class UserResponse(BaseModel):
@@ -15,3 +15,14 @@ class UserResponse(BaseModel):
     last_login: datetime = Field(..., description="Last login timestamp")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserLogsSimpleResponse(BaseModel):
+    log_id: int
+    title: str = Field(...)
+    summary: str = Field(...)
+    thread_name: Optional[str] = None
+
+
+class UserLogsListResponse(BaseModel):
+    logs: List[UserLogsSimpleResponse]

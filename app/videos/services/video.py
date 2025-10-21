@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...users.models import User
 
-from ..schemas import VideoResponse
+from ..schemas import VideoUploadResponse, VideoGetResponse
 from ..repositories import VideoRepository
 from ..models import Video, VideoLocalization
 
@@ -21,7 +21,7 @@ class VideoService:
         self,
         user: User,
         file: UploadFile,
-    ) -> VideoResponse:
+    ) -> VideoUploadResponse:
 
         temp_path = f"/tmp/{uuid.uuid4()}.{file.filename.split('.')[-1]}"
 
@@ -33,14 +33,14 @@ class VideoService:
             "app.tasks.trimming.trim_silence", args=[temp_path, str(video.id)]
         )
 
-        return VideoResponse.model_validate(video)
+        return VideoUploadResponse.model_validate(video)
 
-    async def get_user_videos(self, user_id) -> List[VideoResponse]:
+    async def get_user_videos(self, user_id) -> List[VideoGetResponse]:
         videos = await self.repo.get_user_videos(user_id=user_id)
 
         response_videos = []
         for video in videos:
-            video_data = VideoResponse.model_validate(video)
+            video_data = VideoGetResponse.model_validate(video)
 
             # Find the default localization based on source_language
             default_localization = next(

@@ -88,7 +88,7 @@ def process_log_threading(
 
                         # Link log to the matched thread first
                         await log_service.link_log_to_thread(
-                            log_id=UUID(log_id), thread_id=target_thread_id
+                            log_id=log_id, thread_id=target_thread_id
                         )
                         logger.info(
                             f"✓ Linked log {log_id} to existing thread '{target_thread_meta['name']}'"
@@ -141,7 +141,7 @@ def process_log_threading(
                             keywords=new_meta.keywords,
                         )
                         await log_service.link_log_to_thread(
-                            log_id=UUID(log_id), thread_id=thread.id
+                            log_id=log_id, thread_id=thread.id
                         )
                         logger.info(
                             f"✓ Created new thread '{thread.name}' (ID: {thread.id})"

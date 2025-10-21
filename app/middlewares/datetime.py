@@ -31,6 +31,19 @@ def register_datetime_middleware(app):
                 return obj
 
             converted = convert_dt(data)
-            return JSONResponse(content=converted, status_code=response.status_code)
+
+            new_response = JSONResponse(
+                content=converted, status_code=response.status_code
+            )
+            # ✅ copy cookies
+            for cookie in response.raw_headers:
+                if cookie[0].decode("utf-8").lower() == "set-cookie":
+                    new_response.raw_headers.append(cookie)
+            # ✅ copy other headers
+            for key, value in response.headers.items():
+                if key.lower() != "content-length":
+                    new_response.headers[key] = value
+
+            return new_response
 
         return response

@@ -14,7 +14,21 @@ class VideoLocalizationResponse(BaseModel):
         from_attributes = True
 
 
-class VideoResponse(BaseModel):
+class ThreadSimpleResponse(BaseModel):
+    id: UUID
+    data: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LogSimpleResponse(BaseModel):
+    id: int
+    thread: Optional[ThreadSimpleResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VideoGetResponse(BaseModel):
     id: UUID = Field(..., description="Uniqie identifier of the video")
     user_id: UUID = Field(..., description="Author of the video")
     file_url: str = Field(..., description="Relative path to the video file")
@@ -24,5 +38,15 @@ class VideoResponse(BaseModel):
     description: Optional[str] = None
     subtitles: List[SubtitleResponse] = []
     localizations: List[VideoLocalizationResponse] = []
+    log: Optional[LogSimpleResponse] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VideoUploadResponse(BaseModel):
+    id: UUID = Field(..., description="Uniqie identifier of the video")
+    user_id: UUID = Field(..., description="Author of the video")
+    file_url: str = Field(..., description="Relative path to the video file")
+    created_at: datetime = Field(..., description="Creation timestamp")
 
     model_config = ConfigDict(from_attributes=True)

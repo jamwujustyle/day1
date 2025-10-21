@@ -7,6 +7,11 @@ from app.configs.database import Base
 
 from uuid import UUID
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from . import Video
+
 
 class Subtitle(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "subtitles"
@@ -16,6 +21,6 @@ class Subtitle(Base, UUIDMixin, TimestampMixin):
     segments: Mapped[dict] = mapped_column(JSON, nullable=True)
 
     video_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("videos.id"), nullable=False
+        PG_UUID(as_uuid=True), ForeignKey("videos.id"), nullable=False, index=True
     )
     video: Mapped["Video"] = relationship("Video", back_populates="subtitles")

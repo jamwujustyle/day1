@@ -21,14 +21,12 @@ from .auth.models import MagicLink
 from .oauth.models import SocialAccount
 
 
-from app.configs.datetime_middleware import register_datetime_middleware
-from app.configs.settings import get_settings
+from .middlewares import register_datetime_middleware
+from .configs.settings import get_settings
 
 settings = get_settings()
 
 app = FastAPI(title="logg", version="1.0.0")
-register_datetime_middleware(app)
-
 
 app.mount(settings.MEDIA_URL, StaticFiles(directory=settings.MEDIA_ROOT), name="media")
 
@@ -49,6 +47,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SESSION_SECRET,
 )
+# app.add_middleware(LastActiveMiddleware)
 
 
 @app.get("/oauth-test")

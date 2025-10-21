@@ -1,8 +1,8 @@
 """auto
 
-Revision ID: c8424ba75bff
+Revision ID: 94a04aa37211
 Revises: 
-Create Date: 2025-10-18 12:55:02.602348
+Create Date: 2025-10-21 08:51:36.001885
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'c8424ba75bff'
+revision: str = '94a04aa37211'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -85,11 +85,11 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('logs',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('compressed_context', sa.Text(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('video_id', sa.UUID(), nullable=False),
     sa.Column('thread_id', sa.UUID(), nullable=True),
-    sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['thread_id'], ['threads.id'], ondelete='CASCADE'),

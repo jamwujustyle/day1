@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request, UploadFile, File
 
 
 from .services import UserService
-from .schemas import UserResponse
+from .schemas import UserResponse, UserLogsListResponse
 from .models import User
 
 from ..configs.database import get_db, AsyncSession
@@ -49,3 +49,15 @@ async def update_user_username(
     updated_user = await service.update_username(current_user, new_username, db)
 
     return {"id": str(updated_user.id), "username": updated_user.username}
+
+
+@router.get("/{username}/logs", response_model=UserLogsListResponse)
+async def list_user_logs(username: str, db: AsyncSession = Depends(get_db)):
+    user_service = UserService(db)
+    logs = await user_service.fetch_user_logs(username)
+
+    return UserLogsListResponse(logs=logs)
+
+
+# @router.get("/{username}/logs/{log_id}", response_model=...)
+# async def retrieve_user_log(username: str, db: AsyncSession = Depends(get_db)): ...

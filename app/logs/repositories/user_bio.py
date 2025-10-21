@@ -31,6 +31,8 @@ class UserBioRepository:
             return new_bio
 
     async def fetch_user_bio(self, user_id: UUID) -> Optional[UserBio]:
-        bio = await self.db.execute(select(UserBio).where(UserBio.user_id == user_id))
+        bio = await self.db.execute(
+            select(UserBio.bio).where(UserBio.user_id == user_id)
+        )
 
         return bio.scalar_one_or_none()

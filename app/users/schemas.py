@@ -11,7 +11,7 @@ class UserResponse(BaseModel):
     email: EmailStr = Field(..., description="User's email address")
     username: str = Field(..., description="User's username")
     avatar: Optional[str] = Field(None, description="URL to the user's avatar image")
-
-    created_at: datetime = Field(..., description="Account creation timestamp")
+    bio: Optional[str] = Field(None, description="AI Generated user bio")
+    last_login: datetime = Field(..., description="Last login timestamp")
 
     model_config = ConfigDict(from_attributes=True)

@@ -21,7 +21,7 @@ async def get_current_user_info(
 @router.get("/profile/{username}")
 async def get_user_profile(username: str, db: AsyncSession = Depends(get_db)):
     service = UserService(db)
-    user = service.get_user_by_username(username)
+    user = await service.get_user_profile(username)
     return UserResponse.model_validate(user)
 
 

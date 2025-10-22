@@ -46,7 +46,3 @@ class UserRepository:
         await self.db.commit()
         await self.db.refresh(user)
         return user
-
-    async def update_last_active(self, user: User) -> None:
-        user.last_active_at = datetime.now(timezone.utc)
-        await self.db.commit()

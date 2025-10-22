@@ -19,12 +19,12 @@ class User(Base, UUIDMixin):
     avatar: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
 
-    last_login: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), nullable=True
-    )
-    last_active_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), nullable=True
-    )
+    # last_login: Mapped[datetime] = mapped_column(
+    #     TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), nullable=True
+    # )
+    # last_active_at: Mapped[datetime] = mapped_column(
+    #     TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), nullable=True
+    # )
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         default=datetime.now(timezone.utc),

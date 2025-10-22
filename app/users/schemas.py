@@ -12,7 +12,7 @@ class UserResponse(BaseModel):
     username: str = Field(..., description="User's username")
     avatar: Optional[str] = Field(None, description="URL to the user's avatar image")
     bio: Optional[str] = Field(None, description="AI Generated user bio")
-    last_login: datetime = Field(..., description="Last login timestamp")
+    # last_login: datetime = Field(..., description="Last login timestamp")
 
     model_config = ConfigDict(from_attributes=True)
 

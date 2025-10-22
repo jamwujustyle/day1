@@ -74,3 +74,9 @@ app.include_router(oauth_router)
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(video_router)
+
+from fastapi.routing import APIRoute
+
+for route in app.routes:
+    if isinstance(route, APIRoute):
+        print(f"path: {route.path} name: {route.name}, methods: {route.methods}")

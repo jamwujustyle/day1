@@ -24,17 +24,17 @@ class UserService:
         self.user_repo = UserRepository(db)
         self.bio_repo = UserBioRepository(db)
 
-    async def update_avatar(self, user: User, file: UploadFile) -> User:
+    async def update_avatar(self, user: User, avatar: UploadFile) -> User:
         AVATAR_MEDIA_ROOT = "media/images/avatars"
         os.makedirs(AVATAR_MEDIA_ROOT, exist_ok=True)
 
-        file_extension = file.filename.split(".")[-1]
+        file_extension = avatar.filename.split(".")[-1]
         unique_filename = f"{uuid.uuid4()}.{file_extension}"
         file_path = os.path.join(AVATAR_MEDIA_ROOT, unique_filename)
         file_url = f"/{file_path}"
 
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            shutil.copyfileobj(avatar.file, buffer)
         return await self.user_repo.update_avatar(user, file_url)
 
     async def update_username(self, user: User, new_username: str) -> User:

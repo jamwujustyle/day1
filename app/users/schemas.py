@@ -17,6 +17,10 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UpdateUsernameRequest(BaseModel):
+    new_username: str = Field(...)
+
+
 class UserLogsSimpleResponse(BaseModel):
     log_id: int
     title: str = Field(...)

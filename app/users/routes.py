@@ -11,7 +11,12 @@ from fastapi import (
 
 
 from .services import UserService, UserLogsService
-from .schemas import UserResponse, UserLogsListResponse, ExtendedLogResponse
+from .schemas import (
+    UserResponse,
+    UpdateUsernameRequest,
+    UserLogsListResponse,
+    ExtendedLogResponse,
+)
 from .models import User
 
 from ..configs.database import get_db, AsyncSession
@@ -34,28 +39,26 @@ async def get_user_profile(username: str, db: AsyncSession = Depends(get_db)):
     return UserResponse.model_validate(user)
 
 
-@router.patch("/image/update")
+@router.patch("/avatar/update")
 async def update_user_avatar(
-    request: Request,
-    file: UploadFile = File(...),
+    avatar: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = UserService(db)
-    updated_user = await service.update_avatar(current_user, file, db)
+    updated_user = await service.update_avatar(current_user, avatar)
     return {"id": str(updated_user.id), "avatar": updated_user.avatar}
 
 
 @router.patch("/username/update")
 async def update_user_username(
-    request: Request,
-    new_username: str,
+    payload: UpdateUsernameRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = UserService(db)
 
-    updated_user = await service.update_username(current_user, new_username, db)
+    updated_user = await service.update_username(current_user, payload.new_username)
 
     return {"id": str(updated_user.id), "username": updated_user.username}
 

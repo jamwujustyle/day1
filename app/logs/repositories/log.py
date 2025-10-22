@@ -2,9 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, load_only
 from sqlalchemy import select
 from ..models import Log, Thread
-from app.videos.models import Video, VideoLocalization
+from app.videos.models import Video, VideoLocalization, Subtitle
 from app.users.models import User
 from uuid import UUID
+from typing import Optional
 
 
 class LogRepository:
@@ -57,8 +58,36 @@ class LogRepository:
         )
         return logs.scalars().all()
 
-    async def fetch_log_by_id(self, username: str, log_id: int):
-        log = await self.db.execute(
-            select(Log).join(Log.user).where(User.username == username).options
+    async def fetch_log_by_id(
+        self, username: str, log_id: int, language: Optional[str] = None
+    ):
+        query = (
+            select(Log)
+            .join(Log.user)
+            .where(User.username == username, Log.id == log_id)
+            .options(
+                load_only(Log.id, Log.video_id, Log.thread_id),
+                selectinload(Log.video).load_only(Video.id, Video.file_url),
+                selectinload(Log.thread).load_only(Thread.name),
+            )
         )
-        return log.scalar_one_or_none()
+
+        query = query.options(
+            selectinload(Log.video)
+            .selectinload(Video.localizations)
+            .load_only(
+                VideoLocalization.language,
+                VideoLocalization.title,
+                VideoLocalization.summary,
+            )
+        )
+
+        query = query.options(
+            selectinload(Log.video)
+            .selectinload(Video.subtitles)
+            .load_only(Subtitle.id, Subtitle.language)
+        )
+
+        result = await self.db.execute(query)
+
+        return result.scalar_one_or_none()

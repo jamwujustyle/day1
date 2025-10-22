@@ -38,10 +38,10 @@ openai.api_key = OPENAI_KEY
 
 def make_request(
     messages: list,
-    model="gpt-5",
+    model="gpt-4.1-mini",
     response_format={"type": "json_object"},
     prompt_cache_key: str = None,
-    temperature: float = 0,
+    temperature: float = 1,
     **kwargs,
 ):
     try:

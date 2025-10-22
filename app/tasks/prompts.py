@@ -111,15 +111,23 @@ You are an intelligent content analyzer.
     **New Video Compressed Context:**
     {compressed_context}
 
-    **Your task:**
-    1.  Analyze the new video context and compare it with the existing threads.
-    2.  **If it matches an existing thread**:
-        a.  Indicate which thread it matches (use the 1-based index).
-        b.  Decide if the new context adds significant information to the matched thread.
-        c.  If it does, provide an **updated** summary and keywords for that thread. The new summary should integrate the new information, not just append it.
-    3.  **If it does NOT match any existing thread**:
-        a.  Decide if the content is substantial enough to create a **new** thread.
-        b.  If yes, generate the thread metadata (name, summary, keywords) for the new thread.
+        **Your task:**
+    1. Analyze the new video context and compare it with the existing threads.
+    2. Determine the **primary topic** of the new context — what the creator mainly worked on or discussed.
+    3. Compare that primary topic (not side mentions) with existing threads:
+    - If it continues, refines, or extends an existing topic — treat it as a **match**, even if new subtopics appear.
+    - Minor or secondary mentions (like new experiments, tools, or tangential features) should **not** trigger a new thread.
+    4. If it matches an existing thread:
+    a. Set `"match_found": true`.
+    b. Indicate which thread (1-based index).
+    c. If it adds significant new detail to that same main topic, set `"update_required": true` and provide updated summary + keywords integrating the new info.
+    5. If it doesn’t match any existing thread:
+    a. Create a new thread **only** if the primary focus is *clearly distinct* from all previous ones and forms a standalone, reusable topic.
+    b. Otherwise, set `"should_create_new_thread": false`.
+
+    **Additional guidance:**
+    - Prefer updating an existing thread when the new log represents a continuation of the same technical effort, even if other work is briefly mentioned.
+    - Create new threads only for clearly independent projects or subject shifts (e.g., from ACME connector work → unrelated blockchain prototype).
 
     **Response Format (JSON):**
     {{

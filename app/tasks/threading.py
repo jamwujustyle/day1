@@ -13,7 +13,7 @@ from app.configs.logging_config import logger
 
 @shared_task
 def process_log_threading(
-    log_id: str,
+    log_id: int,
     compressed_context: str,
     user_id: str,
 ):

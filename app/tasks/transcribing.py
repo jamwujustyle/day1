@@ -89,7 +89,7 @@ def transcribe_to_english(video_id: str, source_language: str):
                         video_id=video_id,
                     )
                     process_log_threading.delay(
-                        log_id=str(log.id),
+                        log_id=log.id,
                         compressed_context=response_data.compressed_context,
                         user_id=str(video.user_id),
                     )

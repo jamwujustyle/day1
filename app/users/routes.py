@@ -1,8 +1,17 @@
-from fastapi import APIRouter, Depends, Request, UploadFile, File
+from fastapi import (
+    APIRouter,
+    Depends,
+    Request,
+    UploadFile,
+    File,
+    Query,
+    HTTPException,
+    status,
+)
 
 
 from .services import UserService, UserLogsService
-from .schemas import UserResponse, UserLogsListResponse
+from .schemas import UserResponse, UserLogsListResponse, ExtendedLogResponse
 from .models import User
 
 from ..configs.database import get_db, AsyncSession
@@ -59,5 +68,25 @@ async def list_user_logs(username: str, db: AsyncSession = Depends(get_db)):
     return UserLogsListResponse(logs=logs)
 
 
-# @router.get("/{username}/logs/{log_id}", response_model=...)
-# async def retrieve_user_log(username: str, db: AsyncSession = Depends(get_db)): ...
+@router.get("/{username}/logs/{log_id}", response_model=ExtendedLogResponse)
+async def retrieve_user_log(
+    username: str,
+    log_id: int,
+    language: str = Query(
+        default="en", description="language code for localization", regex="^[a-z]{2}$"
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    # query params:
+    # - lang: ISO 639-1 code default en
+
+    user_service = UserLogsService(db)
+    log_detail = await user_service.fetch_log_detail(
+        username=username, log_id=log_id, language=language
+    )
+
+    if not log_detail:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="resource not found"
+        )
+    return log_detail

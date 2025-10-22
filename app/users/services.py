@@ -1,7 +1,7 @@
 import os
 import shutil
 import uuid
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, HTTPException, status, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,9 @@ from ..logs.repositories import UserBioRepository, LogRepository
 from ..configs.dependencies import get_current_user
 from .schemas import (
     UserLogsSimpleResponse,
+    ExtendedLogResponse,
+    LocalizationDetail,
+    SubtitleInfo,
 )
 
 
@@ -71,5 +74,96 @@ class UserLogsService:
 
         return response_logs
 
-    async def fetch_log_by_id(self, username: str, log_id: int):
-        log = await self.repo.fetch_log_by_id(username=username, log_id=log_id)
+    async def fetch_log_detail(
+        self, username: str, log_id: int, language: str = "en"  # Default language
+    ) -> Optional[ExtendedLogResponse]:
+        log = await self.repo.fetch_log_by_id(username, log_id, language)
+
+        if not log:
+            return None
+
+        video = log.video
+        file_url = video.file_url if video else ""
+
+    async def fetch_log_detail(
+        self, username: str, log_id: int, language: str = "en"  # Default language
+    ) -> Optional[ExtendedLogResponse]:
+        """
+        Fetch extended log data with language-specific localization.
+
+        Args:
+            username: User's username
+            log_id: Log ID to fetch
+            language: ISO language code (e.g., 'en', 'uz', 'ru')
+        """
+        log = await self.repo.fetch_log_by_id(username, log_id, language)
+
+        if not log:
+            return None
+
+        # Extract video data
+        video = log.video
+        file_url = video.file_url if video else ""
+
+        # Language mapping (handles both ISO codes and full names)
+        lang_map = {
+            "en": "english",
+            "ru": "russian",
+            "ar": "arabic",
+            "es": "spanish",
+            "zh": "mandarin",
+            "fr": "french",
+            "hi": "hindi",
+            "pt": "portuguese",
+            "uz": "uzbek",
+        }
+        normalize_lang = lambda lang: lang_map.get(lang.lower(), lang.lower())
+
+        requested_lang_normalized = normalize_lang(language)
+
+        # Find localization for requested language
+        localization = None
+        if video and video.localizations:
+            # Try to find exact language match
+            for loc in video.localizations:
+                if normalize_lang(loc.language) == requested_lang_normalized:
+                    localization = LocalizationDetail(
+                        language=loc.language, title=loc.title, summary=loc.summary
+                    )
+                    break
+
+            # Fallback to first available if requested language not found
+            if not localization and video.localizations:
+                first_loc = video.localizations[0]
+                localization = LocalizationDetail(
+                    language=first_loc.language,
+                    title=first_loc.title,
+                    summary=first_loc.summary,
+                )
+
+        # Get available subtitles (lightweight - just metadata)
+        available_subtitles = []
+        current_subtitle_id = None
+
+        if video and video.subtitles:
+            for subtitle in video.subtitles:
+                available_subtitles.append(
+                    SubtitleInfo(id=subtitle.id, language=subtitle.language)
+                )
+                # Mark current subtitle for requested language
+                if normalize_lang(subtitle.language) == requested_lang_normalized:
+                    current_subtitle_id = subtitle.id
+
+        # Get thread name
+        thread_name = log.thread.name if log.thread else None
+
+        return ExtendedLogResponse(
+            log_id=log.id,
+            video_id=log.video_id,
+            file_url=file_url,
+            thread_name=thread_name,
+            compressed_context=log.compressed_context,
+            localization=localization,
+            available_subtitles=available_subtitles,
+            current_subtitle_id=current_subtitle_id,
+        )

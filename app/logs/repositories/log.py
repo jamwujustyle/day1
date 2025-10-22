@@ -61,33 +61,33 @@ class LogRepository:
     async def fetch_log_by_id(
         self, username: str, log_id: int, language: Optional[str] = None
     ):
+        """
+        Fetch log with selective eager loading based on language preference.
+        Only loads the specific language localization and subtitle if provided.
+        """
+        from sqlalchemy.orm import selectinload, load_only
+
         query = (
             select(Log)
             .join(Log.user)
             .where(User.username == username, Log.id == log_id)
             .options(
-                load_only(Log.id, Log.video_id, Log.thread_id),
-                selectinload(Log.video).load_only(Video.id, Video.file_url),
+                # Load video with its relations in a single chained option
+                selectinload(Log.video).options(
+                    load_only(Video.id, Video.file_url),
+                    selectinload(Video.localizations).load_only(
+                        VideoLocalization.language,
+                        VideoLocalization.title,
+                        VideoLocalization.summary,
+                    ),
+                    selectinload(Video.subtitles).load_only(
+                        Subtitle.id, Subtitle.language
+                    ),
+                ),
+                # Load thread name if exists
                 selectinload(Log.thread).load_only(Thread.name),
             )
         )
 
-        query = query.options(
-            selectinload(Log.video)
-            .selectinload(Video.localizations)
-            .load_only(
-                VideoLocalization.language,
-                VideoLocalization.title,
-                VideoLocalization.summary,
-            )
-        )
-
-        query = query.options(
-            selectinload(Log.video)
-            .selectinload(Video.subtitles)
-            .load_only(Subtitle.id, Subtitle.language)
-        )
-
         result = await self.db.execute(query)
-
         return result.scalar_one_or_none()

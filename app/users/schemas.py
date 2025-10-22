@@ -26,3 +26,25 @@ class UserLogsSimpleResponse(BaseModel):
 
 class UserLogsListResponse(BaseModel):
     logs: List[UserLogsSimpleResponse]
+
+
+class SubtitleInfo(BaseModel):
+    id: UUID
+    language: str
+
+
+class LocalizationDetail(BaseModel):
+    language: str
+    title: Optional[str]
+    summary: Optional[str]
+
+
+class ExtendedLogResponse(BaseModel):
+    log_id: int
+    video_id: UUID
+    file_url: str
+    thread_name: Optional[str]
+
+    localization: Optional[LocalizationDetail]
+    available_subtitles: List[SubtitleInfo] = Field(default_factory=List)
+    current_subtitle_id: Optional[UUID] = None

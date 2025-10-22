@@ -3,6 +3,7 @@ from ..repositories import LogRepository
 from app.videos.repositories import VideoRepository
 
 from uuid import UUID
+from typing import Optional
 
 
 class LogService:
@@ -28,11 +29,3 @@ class LogService:
         logs = await self.repo.fetch_all_user_logs(user_id)
 
         return logs
-
-    async def fetch_log_by_id(
-        self,
-        log_id: int,
-    ):
-        log = await self.repo.fetch_log_by_id(log_id)
-
-        return log

@@ -103,7 +103,7 @@ Generate the updated bio that integrates both the existing understanding and new
 
 
 THREADING_WITH_EXISTING_THREADS_PROMPT = """
-You are an intelligent content analyzer.
+You are an intelligent content analyzer and summarizer specializing in technical development logs.
 
     **Existing Threads:**
     {threads_text}
@@ -111,42 +111,45 @@ You are an intelligent content analyzer.
     **New Video Compressed Context:**
     {compressed_context}
 
-        **Your task:**
+    **Your task:**
     1. Analyze the new video context and compare it with the existing threads.
-    2. Determine the **primary topic** of the new context — what the creator mainly worked on or discussed.
-    3. Compare that primary topic (not side mentions) with existing threads:
-    - If it continues, refines, or extends an existing topic — treat it as a **match**, even if new subtopics appear.
-    - Minor or secondary mentions (like new experiments, tools, or tangential features) should **not** trigger a new thread.
+    2. Identify the **primary technical focus** — what the creator is mainly developing or discussing.
+    3. Compare that main topic with existing threads:
+       - If it continues, refines, or extends an existing topic → treat it as a **match**, even if new subtopics appear.
+       - Ignore minor or tangential mentions (experiments, tools, quick tests).
     4. If it matches an existing thread:
-    a. Set `"match_found": true`.
-    b. Indicate which thread (1-based index).
-    c. If it adds significant new detail to that same main topic, set `"update_required": true` and provide updated summary + keywords integrating the new info.
-    5. If it doesn’t match any existing thread:
-    a. Create a new thread **only** if the primary focus is *clearly distinct* from all previous ones and forms a standalone, reusable topic.
-    b. Otherwise, set `"should_create_new_thread": false`.
+       a. Set `"match_found": true`.
+       b. Specify which thread (1-based index).
+       c. If it meaningfully expands or improves the topic, set `"update_required": true` and provide an updated `"summary"` + `"keywords"`.
 
-    **Additional guidance:**
-    - Prefer updating an existing thread when the new log represents a continuation of the same technical effort, even if other work is briefly mentioned.
-    - Create new threads only for clearly independent projects or subject shifts (e.g., from ACME connector work → unrelated blockchain prototype).
+    **When generating or updating a summary:**
+    - Write in a **project-level, thematic tone**, not a task list.
+    - Use phrases like “A project focused on…”, “An experimental system exploring…”, “A framework integrating…”.
+    - Avoid commit-style phrases like “added”, “tested”, “implemented”.
+    - The summary should describe *what the project is and aims to achieve*, not what was done recently.
+    - Keep it under 200 characters but descriptive enough for context.
+
+    5. If no existing thread matches:
+       - Create a new thread only if the main focus is clearly distinct and forms a standalone, reusable topic.
+       - Otherwise, set `"should_create_new_thread": false`.
 
     **Response Format (JSON):**
     {{
         "match_found": true/false,
-        "matched_thread_index": <number 1-based> (null if no match),
-        "update_required": true/false (only relevant if a match is found),
+        "matched_thread_index": <number or null>,
+        "update_required": true/false,
         "updated_metadata": {{
-            "summary": "Updated summary text",
-            "keywords": ["new", "keyword", "list"]
-        }} (null if no update is required),
-        "should_create_new_thread": true/false (only relevant if no match is found),
-        "new_thread_metadata": {{
-            "name": "New thread name (max 60 chars)",
-            "summary": "Brief summary (max 200 chars)",
+            "summary": "Rewritten, thematic project summary",
             "keywords": ["keyword1", "keyword2"]
-        }} (null if a new thread should not be created),
-        "reasoning": "Brief explanation of your decision process."
+        }} (null if no update),
+        "should_create_new_thread": true/false,
+        "new_thread_metadata": {{
+            "name": "Concise descriptive name (max 60 chars)",
+            "summary": "High-level thematic summary (max 200 chars)",
+            "keywords": ["keyword1", "keyword2"]
+        }} (null if no new thread),
+        "reasoning": "Brief explanation of reasoning."
     }}
-
     **Guidelines for "update_required":**
     - true: The new log adds valuable details, context, or corrects/expands on the existing summary.
     - false: The new log is redundant, trivial, or doesn't add significant value to the thread's summary.
@@ -157,13 +160,22 @@ You are an intelligent content analyzer.
     """
 
 THREADING_NO_THREADS_PROMPT = """
-You are an intelligent content analyzer.
+You are an intelligent content analyzer and summarizer for technical development videos.
 
     **Video Compressed Context:**
     {compressed_context}
 
     **Your task:**
-    Since there are no existing threads, decide if this video content is substantial/meaningful enough to warrant creating the FIRST thread. If yes, generate the thread metadata.
+    - Decide if this content is substantial enough to start the **first thread**.
+    - If yes, generate the thread metadata using **high-level, thematic phrasing** — not a changelog.
+
+    **Guidelines for writing the summary:**
+    - Emphasize the *goal, domain, and technologies involved*, not the exact actions taken.
+    - Example tone:
+        - “A Web3 integration project exploring multicall transactions and gas logic.”
+        - “A backend prototype for decentralized sponsorship and transaction batching.”
+    - Avoid plain action verbs (“added”, “tested”, “built”) unless part of a bigger narrative.
+    - Keep under 200 chars.
 
     **Response Format (JSON):**
     {{
@@ -173,13 +185,12 @@ You are an intelligent content analyzer.
         "updated_metadata": null,
         "should_create_new_thread": true/false,
         "new_thread_metadata": {{
-            "name": "New thread name (max 60 chars)",
-            "summary": "Brief summary (max 200 chars)",
+            "name": "Concise project name (max 60 chars)",
+            "summary": "High-level thematic summary (max 200 chars)",
             "keywords": ["keyword1", "keyword2"]
-        }} (null if a new thread should not be created),
-        "reasoning": "Brief explanation of your decision process."
+        }} (null if no new thread),
+        "reasoning": "Short reasoning for your decision."
     }}
-
     **Guidelines for "should_create_new_thread":**
     - true: Content is informative, reusable knowledge, part of a larger topic.
     - false: Casual/trivial content, test videos, low-value content.

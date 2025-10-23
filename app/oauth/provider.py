@@ -26,7 +26,7 @@ class GoogleProvider:
         return settings.GOOGLE_CLIENT_SECRET
 
     def get_redirect_url(self, request: Request) -> str:
-        return request.url_for("oauth_callback", provider=self.name)
+        return request.url_for("oauth_callback")
 
     def get_auth_params(self, redirect_uri: str, state: str) -> Dict[str, str]:
         return {

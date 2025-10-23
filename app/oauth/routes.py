@@ -18,17 +18,14 @@ async def google_login(request: Request):
     return RedirectResponse(auth_url)
 
 
-@router.get("/callback/{provider}")
+@router.get("/callback/google")
 async def oauth_callback(
-    provider: str,
     request: Request,
     response: Response,
     code: str = None,
     state: str = None,
     db: AsyncSession = Depends(get_db),
 ):
-    if provider != "google":
-        raise HTTPException(status_code=400, detail="Invalid provider")
 
     stored_state = request.session.get("oauth_state")
     if not stored_state or stored_state != state:

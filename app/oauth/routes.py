@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..configs.database import get_db
@@ -13,9 +13,10 @@ router = APIRouter(prefix="/oauth", tags=["oauth"])
 
 
 @router.get("/google")
-async def google_login(request: Request):
+async def initiate_oauth(request: Request):
     auth_url = GoogleProvider().build_auth_url(request)
-    return RedirectResponse(auth_url)
+
+    return JSONResponse({"authorization_url": auth_url, "provider": "google"})
 
 
 @router.get("/callback/google")

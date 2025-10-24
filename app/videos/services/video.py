@@ -33,7 +33,9 @@ class VideoService:
             "app.tasks.trimming.trim_silence", args=[temp_path, str(video.id)]
         )
 
-        return VideoUploadResponse.model_validate(video)
+        return VideoUploadResponse(
+            success=True, file_url=video.file_url, created_at=video.created_at
+        )
 
     async def get_user_videos(self, user_id) -> List[VideoGetResponse]:
         videos = await self.repo.get_user_videos(user_id=user_id)

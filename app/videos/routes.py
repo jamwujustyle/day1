@@ -20,17 +20,15 @@ router = APIRouter(prefix="/videos", tags=["videos"])
 
 @router.post("/upload", response_model=VideoUploadResponse)
 async def upload_video(
-    request: Request,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     service = VideoService(db)
-    video = await service.upload_video(
+    return await service.upload_video(
         user=current_user,
         file=file,
     )
-    return VideoUploadResponse.model_validate(video)
 
 
 # TODO: REFINE PREFETCH LOGIC TO FETCH SUBTITLES LOCALIZATIONS TITLES SUMMARIES ONLY ON DEMAND > DEFAULT TO SELECTED LANGUAGE

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..configs.database import get_db
@@ -50,5 +50,6 @@ async def oauth_callback(
     }
 
     set_auth_cookies(response, tokens)
+    go_back_bro_url: str = "http://localhost:3000/oauth"
 
-    return OAuthCallbackResponse(user=user, is_new_user=result["is_new_user"])
+    return RedirectResponse(url=go_back_bro_url)

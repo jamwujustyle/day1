@@ -44,8 +44,7 @@ class VideoGetResponse(BaseModel):
 
 
 class VideoUploadResponse(BaseModel):
-    id: UUID = Field(..., description="Uniqie identifier of the video")
-    user_id: UUID = Field(..., description="Author of the video")
+    success: bool
     file_url: str = Field(..., description="Relative path to the video file")
     created_at: datetime = Field(..., description="Creation timestamp")
 
